@@ -79,14 +79,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "မိုးညှင်း ရထားခရီးစဉ် | အချိန်ဇယားနှင့် လက်မှတ်ခ" },
+      { name: "description", content: "မိုးညှင်း – မြစ်ကြီးနား ရထားခရီးစဉ်များ၏ အချိန်ဇယား၊ ဘူတာစာရင်းနှင့် လက်မှတ်ခများကို အလွယ်တကူ ရှာဖွေကြည့်ရှုပါ။" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "မိုးညှင်း ရထားခရီးစဉ် | အချိန်ဇယားနှင့် လက်မှတ်ခ" },
+      { property: "og:description", content: "မိုးညှင်း – မြစ်ကြီးနား ရထားခရီးစဉ်များ၏ အချိန်ဇယား၊ ဘူတာစာရင်းနှင့် လက်မှတ်ခများကို အလွယ်တကူ ရှာဖွေကြည့်ရှုပါ။" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "မိုးညှင်း ရထားခရီးစဉ် | အချိန်ဇယားနှင့် လက်မှတ်ခ" },
+      { name: "twitter:description", content: "မိုးညှင်း – မြစ်ကြီးနား ရထားခရီးစဉ်များ၏ အချိန်ဇယား၊ ဘူတာစာရင်းနှင့် လက်မှတ်ခများကို အလွယ်တကူ ရှာဖွေကြည့်ရှုပါ။" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/63faad3d-f12f-4c9e-8b6a-a787ccef6f01/id-preview-8ff9b9cd--56d8223f-007b-47cf-8791-1599b58368e8.lovable.app-1785144915569.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/63faad3d-f12f-4c9e-8b6a-a787ccef6f01/id-preview-8ff9b9cd--56d8223f-007b-47cf-8791-1599b58368e8.lovable.app-1785144915569.png" },
     ],
     links: [
       {
