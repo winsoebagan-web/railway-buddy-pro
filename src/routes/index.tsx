@@ -55,17 +55,25 @@ function Home() {
 
   useEffect(() => {
     let active = true;
+    const cached = readCache<number>("viewers");
+    if (cached !== null) setViewers(cached);
+    const save = (n: number) => {
+      if (!active) return;
+      setViewers(n);
+      writeCache("viewers", n);
+    };
     bumpViewers()
-      .then((n) => active && setViewers(n))
+      .then(save)
       .catch(() => {
         fetchViewerCount()
-          .then((n) => active && setViewers(n))
+          .then(save)
           .catch(() => undefined);
       });
     return () => {
       active = false;
     };
   }, []);
+
 
   const sections = bundle.sections.filter((s) => s.is_visible);
 
