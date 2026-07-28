@@ -12,6 +12,15 @@ import { getRouter } from "./router";
 // Hash history so the bundle works from file:// inside Capacitor.
 const router = getRouter({ history: createHashHistory() });
 
+// The root route's shellComponent renders a full <html> document for SSR.
+// In a client-only mount we render into #root instead, so pass children through.
+(router.routeTree.options as { shellComponent?: unknown }).shellComponent = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => <>{children}</>;
+
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RouterProvider router={router} />
