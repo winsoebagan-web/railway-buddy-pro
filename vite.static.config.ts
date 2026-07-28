@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   root: fileURLToPath(new URL("./static", import.meta.url)),
   base: "./",
+  envDir: fileURLToPath(new URL(".", import.meta.url)),
   publicDir: fileURLToPath(new URL("./public", import.meta.url)),
   plugins: [tsConfigPaths({ root: fileURLToPath(new URL(".", import.meta.url)) }), react(), tailwindcss()],
   resolve: {
