@@ -9,9 +9,8 @@ import { RouterProvider, createHashHistory } from "@tanstack/react-router";
 import "./styles.css";
 import { getRouter } from "./router";
 
-const router = getRouter();
 // Hash history so the bundle works from file:// inside Capacitor.
-router.history = createHashHistory();
+const router = getRouter({ history: createHashHistory() });
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
