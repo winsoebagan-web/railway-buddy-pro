@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { fetchAppBundle, bumpViewers, fetchViewerCount, type AppBundle } from "@/lib/data";
-import { useCached, useOnline, useHydrated } from "@/lib/offline";
+import { useCached, useOnline, useHydrated, readCache, writeCache } from "@/lib/offline";
 import { mmNum } from "@/lib/mm";
 import { Splash } from "@/components/app/Splash";
 import { MarqueeBar } from "@/components/app/MarqueeBar";
