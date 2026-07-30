@@ -195,6 +195,22 @@
   animation: marquee-scroll 22s linear infinite;
 }
 
+@keyframes blink-soft {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@utility animate-blink {
+  animation: blink-soft 0.9s ease-in-out infinite;
+}
+
+
 @keyframes splash-in {
   from {
     opacity: 0;

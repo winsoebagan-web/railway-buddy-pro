@@ -59,6 +59,66 @@ export type Database = {
         }
         Relationships: []
       }
+      live_board_settings: {
+        Row: {
+          auto_enabled: boolean
+          color: string
+          id: number
+          lead_minutes: number
+          sound_url: string | null
+          style: string
+        }
+        Insert: {
+          auto_enabled?: boolean
+          color?: string
+          id?: number
+          lead_minutes?: number
+          sound_url?: string | null
+          style?: string
+        }
+        Update: {
+          auto_enabled?: boolean
+          color?: string
+          id?: number
+          lead_minutes?: number
+          sound_url?: string | null
+          style?: string
+        }
+        Relationships: []
+      }
+      live_notices: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_visible: boolean
+          message: string
+          sort_order: number
+          sound_url: string | null
+          style: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          message: string
+          sort_order?: number
+          sound_url?: string | null
+          style?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          message?: string
+          sort_order?: number
+          sound_url?: string | null
+          style?: string
+        }
+        Relationships: []
+      }
       marquees: {
         Row: {
           color: string

@@ -11,6 +11,8 @@ export type Audio = Tables<"audios">;
 export type Marquee = Tables<"marquees">;
 export type SplashSlide = Tables<"splash_slides">;
 export type Section = Tables<"sections">;
+export type LiveNotice = Tables<"live_notices">;
+export type LiveBoardSettings = Tables<"live_board_settings">;
 
 export type TrainWithStops = Train & { stops: TrainStop[] };
 
@@ -67,6 +69,15 @@ export async function fetchSections(): Promise<Section[]> {
   return unwrap(await supabase.from("sections").select("*").order("sort_order"));
 }
 
+export async function fetchLiveNotices(): Promise<LiveNotice[]> {
+  return unwrap(await supabase.from("live_notices").select("*").order("sort_order"));
+}
+
+export async function fetchLiveBoardSettings(): Promise<LiveBoardSettings | null> {
+  const { data } = await supabase.from("live_board_settings").select("*").eq("id", 1).maybeSingle();
+  return data ?? null;
+}
+
 export async function fetchViewerCount(): Promise<number> {
   const { data } = await supabase.from("viewer_counter").select("count").eq("id", 1).maybeSingle();
   return Number(data?.count ?? 0);
@@ -89,22 +100,37 @@ export type AppBundle = {
   marquees: Marquee[];
   splash: SplashSlide[];
   sections: Section[];
+  liveNotices: LiveNotice[];
+  liveSettings: LiveBoardSettings | null;
   fetchedAt: string;
 };
 
 export async function fetchAppBundle(): Promise<AppBundle> {
-  const [stations, trains, posts, reports, suggestions, audios, marquees, splash, sections] =
-    await Promise.all([
-      fetchStations(),
-      fetchTrains(),
-      fetchPosts(),
-      fetchReports(),
-      fetchSuggestions(),
-      fetchAudios(),
-      fetchMarquees(),
-      fetchSplashSlides(),
-      fetchSections(),
-    ]);
+  const [
+    stations,
+    trains,
+    posts,
+    reports,
+    suggestions,
+    audios,
+    marquees,
+    splash,
+    sections,
+    liveNotices,
+    liveSettings,
+  ] = await Promise.all([
+    fetchStations(),
+    fetchTrains(),
+    fetchPosts(),
+    fetchReports(),
+    fetchSuggestions(),
+    fetchAudios(),
+    fetchMarquees(),
+    fetchSplashSlides(),
+    fetchSections(),
+    fetchLiveNotices(),
+    fetchLiveBoardSettings(),
+  ]);
   return {
     stations,
     trains,
@@ -115,6 +141,9 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     marquees,
     splash,
     sections,
+    liveNotices,
+    liveSettings,
     fetchedAt: new Date().toISOString(),
   };
 }
+

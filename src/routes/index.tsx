@@ -7,6 +7,7 @@ import { mmNum } from "@/lib/mm";
 import { Splash } from "@/components/app/Splash";
 import { MarqueeBar } from "@/components/app/MarqueeBar";
 import { ScheduleSection } from "@/components/app/ScheduleSection";
+import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
 import { ReportsSection } from "@/components/app/ReportsSection";
 import { SuggestionsSection } from "@/components/app/SuggestionsSection";
@@ -43,6 +44,8 @@ const EMPTY: AppBundle = {
   marquees: [],
   splash: [],
   sections: [],
+  liveNotices: [],
+  liveSettings: null,
   fetchedAt: "",
 };
 
@@ -124,7 +127,14 @@ function Home() {
             </div>
             {section.key === "news" ? <PostsSection posts={bundle.posts} /> : null}
             {section.key === "schedule" ? (
-              <ScheduleSection trains={bundle.trains} stations={bundle.stations} />
+              <>
+                <ScheduleSection trains={bundle.trains} stations={bundle.stations} />
+                <LiveBoard
+                  trains={bundle.trains}
+                  notices={bundle.liveNotices}
+                  settings={bundle.liveSettings}
+                />
+              </>
             ) : null}
             {section.key === "reports" ? (
               <ReportsSection
