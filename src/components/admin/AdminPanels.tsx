@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadMedia } from "@/lib/admin-auth";
 import type {
   Audio,
+  LiveBoardSettings,
+  LiveNotice,
   Marquee,
   Post,
   Report,
@@ -32,7 +34,8 @@ type TableName =
   | "audios"
   | "marquees"
   | "splash_slides"
-  | "sections";
+  | "sections"
+  | "live_notices";
 
 export async function saveRow(table: TableName, id: string, patch: Row, onDone: () => void) {
   const { error } = await supabase.from(table).update(patch as never).eq("id", id);
@@ -862,5 +865,219 @@ export function ViewersPanel({ count, refresh }: { count: number; refresh: () =>
         </Button>
       </div>
     </Card>
+  );
+}
+
+/* ------------------------------------------------------- live notice board */
+
+const LIVE_STYLES = [
+  { value: "plain", label: "ရိုးရိုးပြ" },
+  { value: "marquee", label: "စာတန်းပြေး" },
+  { value: "blink", label: "မိတ်တုတ်မိတ်တုတ်" },
+];
+
+function StyleSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <select
+      className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      {LIVE_STYLES.map((s) => (
+        <option key={s.value} value={s.value}>
+          {s.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+export function LiveBoardPanel({
+  rows,
+  settings,
+  refresh,
+}: {
+  rows: LiveNotice[];
+  settings: LiveBoardSettings | null;
+  refresh: () => void;
+}) {
+  const [draft, setDraft] = useState({ message: "", style: "plain", color: "#0ea5e9" });
+  const [busy, setBusy] = useState(false);
+
+  async function saveSettings(patch: Record<string, unknown>) {
+    const { error } = await supabase.from("live_board_settings").update(patch as never).eq("id", 1);
+    if (error) return toast.error(error.message);
+    toast.success("သိမ်းဆည်းပြီးပါပြီ။");
+    refresh();
+  }
+
+  async function uploadSound(file: File, apply: (url: string) => void) {
+    setBusy(true);
+    try {
+      apply(await uploadMedia(file, "live-sound"));
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function move(row: LiveNotice, dir: -1 | 1) {
+    const sorted = [...rows].sort((a, b) => a.sort_order - b.sort_order);
+    const i = sorted.findIndex((r) => r.id === row.id);
+    const j = i + dir;
+    if (j < 0 || j >= sorted.length) return;
+    await supabase.from("live_notices").update({ sort_order: sorted[j].sort_order }).eq("id", row.id);
+    await supabase.from("live_notices").update({ sort_order: row.sort_order }).eq("id", sorted[j].id);
+    refresh();
+  }
+
+  return (
+    <div className="space-y-2">
+      <Card>
+        <Label>ရထားအချိန် အော်တိုအသိပေးချက်</Label>
+        <VisibilityToggle
+          value={settings?.auto_enabled ?? true}
+          onChange={(v) => saveSettings({ auto_enabled: v })}
+          label="အော်တိုပြမည်"
+        />
+        <div className="flex gap-2">
+          <Input
+            type="color"
+            className="w-16"
+            defaultValue={settings?.color ?? "#0284c7"}
+            onBlur={(e) => saveSettings({ color: e.target.value })}
+          />
+          <StyleSelect
+            value={settings?.style ?? "plain"}
+            onChange={(v) => saveSettings({ style: v })}
+          />
+          <Input
+            type="number"
+            min={0}
+            max={60}
+            className="w-20"
+            defaultValue={settings?.lead_minutes ?? 1}
+            onBlur={(e) => saveSettings({ lead_minutes: Number(e.target.value) || 0 })}
+          />
+        </div>
+        <Label className="text-xs">အသိပေးအသံ (mp3)</Label>
+        <Input
+          type="file"
+          accept="audio/*"
+          disabled={busy}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) uploadSound(f, (url) => saveSettings({ sound_url: url }));
+          }}
+        />
+        {settings?.sound_url ? (
+          <div className="flex items-center gap-2">
+            <audio controls preload="none" src={settings.sound_url} className="w-full">
+              <track kind="captions" />
+            </audio>
+            <Button size="icon" variant="outline" onClick={() => saveSettings({ sound_url: null })}>
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        ) : null}
+      </Card>
+
+      <Card>
+        <Label>အသိပေးချက် အသစ်</Label>
+        <Textarea
+          rows={2}
+          maxLength={1000}
+          value={draft.message}
+          onChange={(e) => setDraft({ ...draft, message: e.target.value })}
+          placeholder="စာသား"
+        />
+        <div className="flex gap-2">
+          <Input
+            type="color"
+            className="w-16"
+            value={draft.color}
+            onChange={(e) => setDraft({ ...draft, color: e.target.value })}
+          />
+          <StyleSelect value={draft.style} onChange={(v) => setDraft({ ...draft, style: v })} />
+          <Button
+            onClick={() => {
+              if (!draft.message.trim()) return;
+              insertRow(
+                "live_notices",
+                { ...draft, message: draft.message.slice(0, 1000), sort_order: rows.length + 1 },
+                refresh,
+              );
+              setDraft({ message: "", style: "plain", color: "#0ea5e9" });
+            }}
+          >
+            <Plus className="size-4" /> ထည့်မည်
+          </Button>
+        </div>
+      </Card>
+
+      {[...rows]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((row) => (
+          <Card key={row.id}>
+            <Textarea
+              rows={2}
+              maxLength={1000}
+              defaultValue={row.message}
+              onBlur={(e) => {
+                if (e.target.value !== row.message)
+                  saveRow("live_notices", row.id, { message: e.target.value }, refresh);
+              }}
+            />
+            <div className="flex gap-2">
+              <Input
+                type="color"
+                className="w-16"
+                defaultValue={row.color}
+                onBlur={(e) => saveRow("live_notices", row.id, { color: e.target.value }, refresh)}
+              />
+              <StyleSelect
+                value={row.style}
+                onChange={(v) => saveRow("live_notices", row.id, { style: v }, refresh)}
+              />
+              <Button size="icon" variant="outline" onClick={() => move(row, -1)}>
+                <ArrowUp className="size-4" />
+              </Button>
+              <Button size="icon" variant="outline" onClick={() => move(row, 1)}>
+                <ArrowDown className="size-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={() => deleteRow("live_notices", row.id, refresh)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+            <Label className="text-xs">အသံ (mp3)</Label>
+            <Input
+              type="file"
+              accept="audio/*"
+              disabled={busy}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f)
+                  uploadSound(f, (url) =>
+                    saveRow("live_notices", row.id, { sound_url: url }, refresh),
+                  );
+              }}
+            />
+            {row.sound_url ? (
+              <audio controls preload="none" src={row.sound_url} className="w-full">
+                <track kind="captions" />
+              </audio>
+            ) : null}
+            <VisibilityToggle
+              value={row.is_visible}
+              onChange={(v) => saveRow("live_notices", row.id, { is_visible: v }, refresh)}
+            />
+          </Card>
+        ))}
+    </div>
   );
 }
