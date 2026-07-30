@@ -47,7 +47,6 @@ const EMPTY: AppBundle = {
   liveSettings: null,
   fetchedAt: "",
 };
-};
 
 function Home() {
   const hydrated = useHydrated();
