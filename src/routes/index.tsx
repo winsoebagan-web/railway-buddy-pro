@@ -43,7 +43,10 @@ const EMPTY: AppBundle = {
   marquees: [],
   splash: [],
   sections: [],
+  liveNotices: [],
+  liveSettings: null,
   fetchedAt: "",
+};
 };
 
 function Home() {
