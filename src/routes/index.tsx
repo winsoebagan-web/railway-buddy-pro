@@ -126,7 +126,14 @@ function Home() {
             </div>
             {section.key === "news" ? <PostsSection posts={bundle.posts} /> : null}
             {section.key === "schedule" ? (
-              <ScheduleSection trains={bundle.trains} stations={bundle.stations} />
+              <>
+                <ScheduleSection trains={bundle.trains} stations={bundle.stations} />
+                <LiveBoard
+                  trains={bundle.trains}
+                  notices={bundle.liveNotices}
+                  settings={bundle.liveSettings}
+                />
+              </>
             ) : null}
             {section.key === "reports" ? (
               <ReportsSection
