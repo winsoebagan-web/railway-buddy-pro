@@ -7,6 +7,7 @@ import { mmNum } from "@/lib/mm";
 import { Splash } from "@/components/app/Splash";
 import { MarqueeBar } from "@/components/app/MarqueeBar";
 import { ScheduleSection } from "@/components/app/ScheduleSection";
+import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
 import { ReportsSection } from "@/components/app/ReportsSection";
 import { SuggestionsSection } from "@/components/app/SuggestionsSection";
