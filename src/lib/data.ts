@@ -11,6 +11,8 @@ export type Audio = Tables<"audios">;
 export type Marquee = Tables<"marquees">;
 export type SplashSlide = Tables<"splash_slides">;
 export type Section = Tables<"sections">;
+export type LiveNotice = Tables<"live_notices">;
+export type LiveBoardSettings = Tables<"live_board_settings">;
 
 export type TrainWithStops = Train & { stops: TrainStop[] };
 
