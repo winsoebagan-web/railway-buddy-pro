@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { adminSignIn, adminSignOut, isAdminSession } from "@/lib/admin-auth";
 import {
   fetchAudios,
+  fetchLiveBoardSettings,
+  fetchLiveNotices,
   fetchMarquees,
   fetchPosts,
   fetchReports,
@@ -15,6 +17,8 @@ import {
   fetchTrains,
   fetchViewerCount,
   type Audio,
+  type LiveBoardSettings,
+  type LiveNotice,
   type Marquee,
   type Post,
   type Report,
@@ -26,6 +30,7 @@ import {
 } from "@/lib/data";
 import {
   AudiosPanel,
+  LiveBoardPanel,
   MarqueesPanel,
   PostsPanel,
   ReportsPanel,
@@ -65,6 +70,8 @@ type AdminData = {
   marquees: Marquee[];
   splash: SplashSlide[];
   sections: Section[];
+  liveNotices: LiveNotice[];
+  liveSettings: LiveBoardSettings | null;
   viewers: number;
 };
 
@@ -78,6 +85,8 @@ const EMPTY: AdminData = {
   marquees: [],
   splash: [],
   sections: [],
+  liveNotices: [],
+  liveSettings: null,
   viewers: 0,
 };
 
@@ -89,6 +98,7 @@ const TABS = [
   { key: "reports", label: "တင်ပြချက်" },
   { key: "suggestions", label: "အကြံပြုလွှာ" },
   { key: "audios", label: "အသံဖိုင်" },
+  { key: "live", label: "အသိပေးဘုတ်" },
   { key: "marquees", label: "စာတန်းပြေး" },
   { key: "splash", label: "ဖွင့်ချိန်ပြ" },
   { key: "viewers", label: "ကြည့်သူ" },
@@ -110,6 +120,8 @@ function AdminPage() {
       marquees,
       splash,
       sections,
+      liveNotices,
+      liveSettings,
       viewers,
     ] = await Promise.all([
       fetchStations(),
@@ -121,6 +133,8 @@ function AdminPage() {
       fetchMarquees(),
       fetchSplashSlides(),
       fetchSections(),
+      fetchLiveNotices(),
+      fetchLiveBoardSettings(),
       fetchViewerCount(),
     ]);
     setData({
@@ -133,6 +147,8 @@ function AdminPage() {
       marquees,
       splash,
       sections,
+      liveNotices,
+      liveSettings,
       viewers,
     });
   }, []);
@@ -216,6 +232,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="audios" className="mt-4">
             <AudiosPanel rows={data.audios} refresh={load} />
+          </TabsContent>
+          <TabsContent value="live" className="mt-4">
+            <LiveBoardPanel rows={data.liveNotices} settings={data.liveSettings} refresh={load} />
           </TabsContent>
           <TabsContent value="marquees" className="mt-4">
             <MarqueesPanel rows={data.marquees} refresh={load} />
