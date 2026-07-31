@@ -63,14 +63,16 @@ function useChime(url: string | null | undefined, trigger: string) {
 }
 
 export function LiveBoard({
-  trains,
-  notices,
+  trains: trainsProp,
+  notices: noticesProp,
   settings,
 }: {
-  trains: TrainWithStops[];
-  notices: LiveNotice[];
-  settings: LiveBoardSettings | null;
+  trains?: TrainWithStops[] | null;
+  notices?: LiveNotice[] | null;
+  settings?: LiveBoardSettings | null;
 }) {
+  const trains = trainsProp ?? [];
+  const notices = noticesProp ?? [];
   const [current, setCurrent] = useState(() => nowMinutes());
 
   useEffect(() => {
