@@ -77,6 +77,27 @@ function Home() {
     };
   }, []);
 
+  // Admin ပြင်လိုက်တာကို အလိုအလျောက် အသစ်ရယူပါ (၄၅ စက္ကန့်တစ်ခါ + ဖုန်းပြန်ဖွင့်ချိန်)
+  useEffect(() => {
+    const tick = () => {
+      if (typeof window !== "undefined" && window.navigator.onLine) void refresh();
+    };
+    const timer = setInterval(tick, 45_000);
+    const onFocus = () => tick();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refresh]);
+
 
   const sections = bundle.sections.filter((s) => s.is_visible);
 
