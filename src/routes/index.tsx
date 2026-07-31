@@ -12,6 +12,7 @@ import { PostsSection } from "@/components/app/PostsSection";
 import { ReportsSection } from "@/components/app/ReportsSection";
 import { SuggestionsSection } from "@/components/app/SuggestionsSection";
 import { AudioSection } from "@/components/app/AudioSection";
+import { DemuSection } from "@/components/app/DemuSection";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -46,6 +47,7 @@ const EMPTY: AppBundle = {
   sections: [],
   liveNotices: [],
   liveSettings: null,
+  demu: [],
   fetchedAt: "",
 };
 
@@ -169,6 +171,7 @@ function Home() {
               <SuggestionsSection suggestions={bundle.suggestions} onChanged={refresh} />
             ) : null}
             {section.key === "audio" ? <AudioSection audios={bundle.audios} /> : null}
+            {section.key === "demu" ? <DemuSection rows={bundle.demu} /> : null}
           </section>
         ))}
 

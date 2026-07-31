@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { adminSignIn, adminSignOut, isAdminSession } from "@/lib/admin-auth";
 import {
   fetchAudios,
+  fetchDemuSchedules,
   fetchLiveBoardSettings,
   fetchLiveNotices,
   fetchMarquees,
@@ -17,6 +18,7 @@ import {
   fetchTrains,
   fetchViewerCount,
   type Audio,
+  type DemuSchedule,
   type LiveBoardSettings,
   type LiveNotice,
   type Marquee,
@@ -30,6 +32,7 @@ import {
 } from "@/lib/data";
 import {
   AudiosPanel,
+  DemuPanel,
   LiveBoardPanel,
   MarqueesPanel,
   PostsPanel,
@@ -72,6 +75,7 @@ type AdminData = {
   sections: Section[];
   liveNotices: LiveNotice[];
   liveSettings: LiveBoardSettings | null;
+  demu: DemuSchedule[];
   viewers: number;
 };
 
@@ -87,6 +91,7 @@ const EMPTY: AdminData = {
   sections: [],
   liveNotices: [],
   liveSettings: null,
+  demu: [],
   viewers: 0,
 };
 
@@ -101,6 +106,7 @@ const TABS = [
   { key: "live", label: "အသိပေးဘုတ်" },
   { key: "marquees", label: "စာတန်းပြေး" },
   { key: "splash", label: "ဖွင့်ချိန်ပြ" },
+  { key: "demu", label: "DEMU" },
   { key: "viewers", label: "ကြည့်သူ" },
 ];
 
@@ -122,6 +128,7 @@ function AdminPage() {
       sections,
       liveNotices,
       liveSettings,
+      demu,
       viewers,
     ] = await Promise.all([
       fetchStations(),
@@ -135,6 +142,7 @@ function AdminPage() {
       fetchSections(),
       fetchLiveNotices(),
       fetchLiveBoardSettings(),
+      fetchDemuSchedules(),
       fetchViewerCount(),
     ]);
     setData({
@@ -149,6 +157,7 @@ function AdminPage() {
       sections,
       liveNotices,
       liveSettings,
+      demu,
       viewers,
     });
   }, []);
@@ -241,6 +250,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="splash" className="mt-4">
             <SplashPanel rows={data.splash} refresh={load} />
+          </TabsContent>
+          <TabsContent value="demu" className="mt-4">
+            <DemuPanel rows={data.demu} refresh={load} />
           </TabsContent>
           <TabsContent value="viewers" className="mt-4">
             <ViewersPanel count={data.viewers} refresh={load} />
