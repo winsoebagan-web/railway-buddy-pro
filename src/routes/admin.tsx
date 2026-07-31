@@ -157,6 +157,7 @@ function AdminPage() {
       sections,
       liveNotices,
       liveSettings,
+      demu,
       viewers,
     });
   }, []);
