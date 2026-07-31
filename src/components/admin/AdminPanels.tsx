@@ -533,10 +533,64 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
 
       {rows.map((row) => (
         <Card key={row.id}>
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              placeholder="Facebook URL"
+              defaultValue={row.facebook_url ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { facebook_url: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="Facebook စာသား"
+              defaultValue={row.facebook_label ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { facebook_label: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="TikTok URL"
+              defaultValue={row.tiktok_url ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { tiktok_url: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="TikTok စာသား"
+              defaultValue={row.tiktok_label ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { tiktok_label: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="Website URL"
+              defaultValue={row.website_url ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { website_url: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="Website စာသား"
+              defaultValue={row.website_label ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { website_label: e.target.value || null }, refresh)
+              }
+            />
+          </div>
+          <label className="flex items-center gap-2 text-xs font-medium">
+            စာသားအရောင်
+            <input
+              type="color"
+              defaultValue={row.link_color ?? "#1d4ed8"}
+              onBlur={(e) => saveRow("posts", row.id, { link_color: e.target.value }, refresh)}
+              className="h-8 w-12 rounded border border-border"
+            />
+          </label>
           <Input
             defaultValue={row.title}
             onBlur={(e) => saveRow("posts", row.id, { title: e.target.value }, refresh)}
           />
+
           <Textarea
             rows={3}
             maxLength={2000}
