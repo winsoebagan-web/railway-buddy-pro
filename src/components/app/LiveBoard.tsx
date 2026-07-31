@@ -21,7 +21,7 @@ type AutoItem = { key: string; text: string; soon: boolean };
 function buildAuto(trains: TrainWithStops[], lead: number, current: number): AutoItem[] {
   const out: AutoItem[] = [];
   for (const train of trains) {
-    const stops = train.stops.filter((s) => s.stops);
+    const stops = (train.stops ?? []).filter((s) => s.stops);
     for (const stop of stops) {
       const dep = minutesOf(stop.depart_time);
       const arr = minutesOf(stop.arrive_time);
@@ -63,14 +63,16 @@ function useChime(url: string | null | undefined, trigger: string) {
 }
 
 export function LiveBoard({
-  trains,
-  notices,
+  trains: trainsProp,
+  notices: noticesProp,
   settings,
 }: {
-  trains: TrainWithStops[];
-  notices: LiveNotice[];
-  settings: LiveBoardSettings | null;
+  trains?: TrainWithStops[] | null;
+  notices?: LiveNotice[] | null;
+  settings?: LiveBoardSettings | null;
 }) {
+  const trains = trainsProp ?? [];
+  const notices = noticesProp ?? [];
   const [current, setCurrent] = useState(() => nowMinutes());
 
   useEffect(() => {
