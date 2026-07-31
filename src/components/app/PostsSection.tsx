@@ -137,16 +137,19 @@ export function PostsSection({ posts }: { posts: Post[] }) {
             className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-card shadow-card sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 flex items-center gap-2 border-b border-border bg-card px-4 py-3">
-              <h3 className="flex-1 text-sm font-bold text-primary">{active.title}</h3>
-              <button
-                type="button"
-                aria-label="ပိတ်ရန်"
-                onClick={() => setActive(null)}
-                className="rounded-full bg-muted p-1.5 text-muted-foreground"
-              >
-                <X className="size-4" />
-              </button>
+            <div className="sticky top-0 z-10 space-y-2 border-b border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2">
+                <h3 className="flex-1 text-sm font-bold text-primary">{active.title}</h3>
+                <button
+                  type="button"
+                  aria-label="ပိတ်ရန်"
+                  onClick={() => setActive(null)}
+                  className="rounded-full bg-muted p-1.5 text-muted-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <PostLinks post={active} />
             </div>
             {active.image_url ? (
               <img
@@ -160,7 +163,6 @@ export function PostsSection({ posts }: { posts: Post[] }) {
                 {active.body}
               </p>
               <div className="flex items-center gap-3 border-t border-border pt-3">
-                <PostLinks post={active} size="size-5" />
                 <span className="ml-auto text-[11px] text-muted-foreground">
                   {mmRelative(active.created_at)}
                 </span>
