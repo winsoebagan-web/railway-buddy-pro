@@ -105,6 +105,7 @@ export function PostsSection({ posts }: { posts: Post[] }) {
               </div>
             )}
             <div className="flex flex-1 flex-col gap-1 p-3">
+              <PostLinks post={post} compact />
               <div className="flex items-start gap-1">
                 {post.is_pinned ? (
                   <Pin className="mt-0.5 size-3.5 shrink-0 text-sun-foreground" />
@@ -115,7 +116,6 @@ export function PostsSection({ posts }: { posts: Post[] }) {
                 {post.body}
               </p>
               <div className="mt-auto flex items-center gap-2 pt-2">
-                <PostLinks post={post} />
                 <span className="ml-auto text-[10px] text-muted-foreground">
                   {mmRelative(post.created_at)}
                 </span>
