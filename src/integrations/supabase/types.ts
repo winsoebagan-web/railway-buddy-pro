@@ -59,6 +59,54 @@ export type Database = {
         }
         Relationships: []
       }
+      demu_schedules: {
+        Row: {
+          arrive_time: string | null
+          city: string
+          created_at: string
+          depart_time: string | null
+          fare_ordinary: number | null
+          fare_upper: number | null
+          id: string
+          is_visible: boolean
+          note: string | null
+          route: string
+          sort_order: number
+          train_no: string
+          updated_at: string
+        }
+        Insert: {
+          arrive_time?: string | null
+          city: string
+          created_at?: string
+          depart_time?: string | null
+          fare_ordinary?: number | null
+          fare_upper?: number | null
+          id?: string
+          is_visible?: boolean
+          note?: string | null
+          route?: string
+          sort_order?: number
+          train_no?: string
+          updated_at?: string
+        }
+        Update: {
+          arrive_time?: string | null
+          city?: string
+          created_at?: string
+          depart_time?: string | null
+          fare_ordinary?: number | null
+          fare_upper?: number | null
+          id?: string
+          is_visible?: boolean
+          note?: string | null
+          route?: string
+          sort_order?: number
+          train_no?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       live_board_settings: {
         Row: {
           auto_enabled: boolean
