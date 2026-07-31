@@ -153,40 +153,52 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          facebook_label: string | null
           facebook_url: string | null
           id: string
           image_url: string | null
           is_pinned: boolean
           is_visible: boolean
+          link_color: string | null
+          tiktok_label: string | null
           tiktok_url: string | null
           title: string
           updated_at: string
+          website_label: string | null
           website_url: string | null
         }
         Insert: {
           body?: string
           created_at?: string
+          facebook_label?: string | null
           facebook_url?: string | null
           id?: string
           image_url?: string | null
           is_pinned?: boolean
           is_visible?: boolean
+          link_color?: string | null
+          tiktok_label?: string | null
           tiktok_url?: string | null
           title?: string
           updated_at?: string
+          website_label?: string | null
           website_url?: string | null
         }
         Update: {
           body?: string
           created_at?: string
+          facebook_label?: string | null
           facebook_url?: string | null
           id?: string
           image_url?: string | null
           is_pinned?: boolean
           is_visible?: boolean
+          link_color?: string | null
+          tiktok_label?: string | null
           tiktok_url?: string | null
           title?: string
           updated_at?: string
+          website_label?: string | null
           website_url?: string | null
         }
         Relationships: []

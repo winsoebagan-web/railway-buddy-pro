@@ -3,43 +3,63 @@ import { Facebook, Globe, Music2, Pin, X } from "lucide-react";
 import type { Post } from "@/lib/data";
 import { isFresh, mmRelative } from "@/lib/mm";
 
-function PostLinks({ post, size = "size-4" }: { post: Post; size?: string }) {
+function normalizeUrl(url: string) {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+function LinkChip({
+  href,
+  label,
+  color,
+  icon: Icon,
+  compact,
+}: {
+  href: string;
+  label: string;
+  color: string;
+  icon: typeof Facebook;
+  compact?: boolean;
+}) {
   return (
-    <>
-      {post.facebook_url ? (
-        <a
-          href={post.facebook_url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Facebook"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Facebook className={`${size} text-primary`} />
-        </a>
-      ) : null}
-      {post.tiktok_url ? (
-        <a
-          href={post.tiktok_url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="TikTok"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Music2 className={`${size} text-secondary-foreground`} />
-        </a>
-      ) : null}
-      {post.website_url ? (
-        <a
-          href={post.website_url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Website"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Globe className={`${size} text-sun-foreground`} />
-        </a>
-      ) : null}
-    </>
+    <a
+      href={normalizeUrl(href)}
+      target="_blank"
+      rel="noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      style={{ color, borderColor: color }}
+      className={`inline-flex items-center gap-1 rounded-full border bg-card font-semibold ${
+        compact ? "px-2 py-0.5 text-[10px]" : "px-3 py-1 text-xs"
+      }`}
+    >
+      <Icon className={compact ? "size-3" : "size-4"} />
+      {label}
+    </a>
+  );
+}
+
+export function PostLinks({ post, compact }: { post: Post; compact?: boolean }) {
+  const color = post.link_color || "hsl(var(--primary))";
+  const items = [
+    { url: post.facebook_url, label: post.facebook_label || "Facebook", icon: Facebook },
+    { url: post.tiktok_url, label: post.tiktok_label || "TikTok", icon: Music2 },
+    { url: post.website_url, label: post.website_label || "Website", icon: Globe },
+  ].filter((i) => i.url);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {items.map((i) => (
+        <LinkChip
+          key={i.label}
+          href={i.url as string}
+          label={i.label}
+          color={color}
+          icon={i.icon}
+          compact={compact}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -85,6 +105,7 @@ export function PostsSection({ posts }: { posts: Post[] }) {
               </div>
             )}
             <div className="flex flex-1 flex-col gap-1 p-3">
+              <PostLinks post={post} compact />
               <div className="flex items-start gap-1">
                 {post.is_pinned ? (
                   <Pin className="mt-0.5 size-3.5 shrink-0 text-sun-foreground" />
@@ -95,7 +116,6 @@ export function PostsSection({ posts }: { posts: Post[] }) {
                 {post.body}
               </p>
               <div className="mt-auto flex items-center gap-2 pt-2">
-                <PostLinks post={post} />
                 <span className="ml-auto text-[10px] text-muted-foreground">
                   {mmRelative(post.created_at)}
                 </span>
@@ -117,16 +137,19 @@ export function PostsSection({ posts }: { posts: Post[] }) {
             className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-card shadow-card sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 flex items-center gap-2 border-b border-border bg-card px-4 py-3">
-              <h3 className="flex-1 text-sm font-bold text-primary">{active.title}</h3>
-              <button
-                type="button"
-                aria-label="ပိတ်ရန်"
-                onClick={() => setActive(null)}
-                className="rounded-full bg-muted p-1.5 text-muted-foreground"
-              >
-                <X className="size-4" />
-              </button>
+            <div className="sticky top-0 z-10 space-y-2 border-b border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2">
+                <h3 className="flex-1 text-sm font-bold text-primary">{active.title}</h3>
+                <button
+                  type="button"
+                  aria-label="ပိတ်ရန်"
+                  onClick={() => setActive(null)}
+                  className="rounded-full bg-muted p-1.5 text-muted-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <PostLinks post={active} />
             </div>
             {active.image_url ? (
               <img
@@ -140,7 +163,6 @@ export function PostsSection({ posts }: { posts: Post[] }) {
                 {active.body}
               </p>
               <div className="flex items-center gap-3 border-t border-border pt-3">
-                <PostLinks post={active} size="size-5" />
                 <span className="ml-auto text-[11px] text-muted-foreground">
                   {mmRelative(active.created_at)}
                 </span>

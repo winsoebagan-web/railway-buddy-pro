@@ -392,6 +392,10 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
     facebook_url: "",
     tiktok_url: "",
     website_url: "",
+    facebook_label: "",
+    tiktok_label: "",
+    website_label: "",
+    link_color: "#1d4ed8",
     is_pinned: false,
   });
   const [busy, setBusy] = useState(false);
@@ -411,7 +415,49 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
   return (
     <div className="space-y-2">
       <Card>
-        <Label>ပို့စ်အသစ်</Label>
+        <Label>ပို့စ်အသစ် — လင့်ခ်များ (ပို့စ်ထိပ်တွင် ပြပါမည်)</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            placeholder="Facebook URL"
+            value={draft.facebook_url}
+            onChange={(e) => setDraft({ ...draft, facebook_url: e.target.value })}
+          />
+          <Input
+            placeholder="Facebook စာသား"
+            value={draft.facebook_label}
+            onChange={(e) => setDraft({ ...draft, facebook_label: e.target.value })}
+          />
+          <Input
+            placeholder="TikTok URL"
+            value={draft.tiktok_url}
+            onChange={(e) => setDraft({ ...draft, tiktok_url: e.target.value })}
+          />
+          <Input
+            placeholder="TikTok စာသား"
+            value={draft.tiktok_label}
+            onChange={(e) => setDraft({ ...draft, tiktok_label: e.target.value })}
+          />
+          <Input
+            placeholder="Website URL"
+            value={draft.website_url}
+            onChange={(e) => setDraft({ ...draft, website_url: e.target.value })}
+          />
+          <Input
+            placeholder="Website စာသား"
+            value={draft.website_label}
+            onChange={(e) => setDraft({ ...draft, website_label: e.target.value })}
+          />
+        </div>
+        <label className="flex items-center gap-2 text-xs font-medium">
+          စာသားအရောင်
+          <input
+            type="color"
+            value={draft.link_color}
+            onChange={(e) => setDraft({ ...draft, link_color: e.target.value })}
+            className="h-8 w-12 rounded border border-border"
+          />
+        </label>
+
         <Input
           placeholder="ခေါင်းစဉ်"
           value={draft.title}
@@ -437,21 +483,6 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
           />
           {draft.image_url ? <Upload className="size-4 text-secondary-foreground" /> : null}
         </div>
-        <Input
-          placeholder="Facebook URL"
-          value={draft.facebook_url}
-          onChange={(e) => setDraft({ ...draft, facebook_url: e.target.value })}
-        />
-        <Input
-          placeholder="TikTok URL"
-          value={draft.tiktok_url}
-          onChange={(e) => setDraft({ ...draft, tiktok_url: e.target.value })}
-        />
-        <Input
-          placeholder="Website URL"
-          value={draft.website_url}
-          onChange={(e) => setDraft({ ...draft, website_url: e.target.value })}
-        />
         <label className="flex items-center gap-2 text-xs font-medium">
           <Switch
             checked={draft.is_pinned}
@@ -472,6 +503,10 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
                 facebook_url: draft.facebook_url || null,
                 tiktok_url: draft.tiktok_url || null,
                 website_url: draft.website_url || null,
+                facebook_label: draft.facebook_label || null,
+                tiktok_label: draft.tiktok_label || null,
+                website_label: draft.website_label || null,
+                link_color: draft.link_color || null,
                 is_pinned: draft.is_pinned,
               },
               refresh,
@@ -483,6 +518,10 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
               facebook_url: "",
               tiktok_url: "",
               website_url: "",
+              facebook_label: "",
+              tiktok_label: "",
+              website_label: "",
+              link_color: "#1d4ed8",
               is_pinned: false,
             });
           }}
@@ -491,12 +530,67 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
         </Button>
       </Card>
 
+
       {rows.map((row) => (
         <Card key={row.id}>
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              placeholder="Facebook URL"
+              defaultValue={row.facebook_url ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { facebook_url: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="Facebook စာသား"
+              defaultValue={row.facebook_label ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { facebook_label: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="TikTok URL"
+              defaultValue={row.tiktok_url ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { tiktok_url: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="TikTok စာသား"
+              defaultValue={row.tiktok_label ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { tiktok_label: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="Website URL"
+              defaultValue={row.website_url ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { website_url: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              placeholder="Website စာသား"
+              defaultValue={row.website_label ?? ""}
+              onBlur={(e) =>
+                saveRow("posts", row.id, { website_label: e.target.value || null }, refresh)
+              }
+            />
+          </div>
+          <label className="flex items-center gap-2 text-xs font-medium">
+            စာသားအရောင်
+            <input
+              type="color"
+              defaultValue={row.link_color ?? "#1d4ed8"}
+              onBlur={(e) => saveRow("posts", row.id, { link_color: e.target.value }, refresh)}
+              className="h-8 w-12 rounded border border-border"
+            />
+          </label>
           <Input
             defaultValue={row.title}
             onBlur={(e) => saveRow("posts", row.id, { title: e.target.value }, refresh)}
           />
+
           <Textarea
             rows={3}
             maxLength={2000}
