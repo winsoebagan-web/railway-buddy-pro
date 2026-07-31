@@ -3,43 +3,63 @@ import { Facebook, Globe, Music2, Pin, X } from "lucide-react";
 import type { Post } from "@/lib/data";
 import { isFresh, mmRelative } from "@/lib/mm";
 
-function PostLinks({ post, size = "size-4" }: { post: Post; size?: string }) {
+function normalizeUrl(url: string) {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+function LinkChip({
+  href,
+  label,
+  color,
+  icon: Icon,
+  compact,
+}: {
+  href: string;
+  label: string;
+  color: string;
+  icon: typeof Facebook;
+  compact?: boolean;
+}) {
   return (
-    <>
-      {post.facebook_url ? (
-        <a
-          href={post.facebook_url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Facebook"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Facebook className={`${size} text-primary`} />
-        </a>
-      ) : null}
-      {post.tiktok_url ? (
-        <a
-          href={post.tiktok_url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="TikTok"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Music2 className={`${size} text-secondary-foreground`} />
-        </a>
-      ) : null}
-      {post.website_url ? (
-        <a
-          href={post.website_url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Website"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Globe className={`${size} text-sun-foreground`} />
-        </a>
-      ) : null}
-    </>
+    <a
+      href={normalizeUrl(href)}
+      target="_blank"
+      rel="noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      style={{ color, borderColor: color }}
+      className={`inline-flex items-center gap-1 rounded-full border bg-card font-semibold ${
+        compact ? "px-2 py-0.5 text-[10px]" : "px-3 py-1 text-xs"
+      }`}
+    >
+      <Icon className={compact ? "size-3" : "size-4"} />
+      {label}
+    </a>
+  );
+}
+
+export function PostLinks({ post, compact }: { post: Post; compact?: boolean }) {
+  const color = post.link_color || "hsl(var(--primary))";
+  const items = [
+    { url: post.facebook_url, label: post.facebook_label || "Facebook", icon: Facebook },
+    { url: post.tiktok_url, label: post.tiktok_label || "TikTok", icon: Music2 },
+    { url: post.website_url, label: post.website_label || "Website", icon: Globe },
+  ].filter((i) => i.url);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {items.map((i) => (
+        <LinkChip
+          key={i.label}
+          href={i.url as string}
+          label={i.label}
+          color={color}
+          icon={i.icon}
+          compact={compact}
+        />
+      ))}
+    </div>
   );
 }
 
