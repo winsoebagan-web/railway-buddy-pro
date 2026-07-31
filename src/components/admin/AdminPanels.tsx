@@ -13,6 +13,7 @@ import type {
   SplashSlide,
   Station,
   Suggestion,
+  DemuSchedule,
   TrainStop,
   TrainWithStops,
 } from "@/lib/data";
@@ -35,7 +36,8 @@ type TableName =
   | "marquees"
   | "splash_slides"
   | "sections"
-  | "live_notices";
+  | "live_notices"
+  | "demu_schedules";
 
 export async function saveRow(table: TableName, id: string, patch: Row, onDone: () => void) {
   const { error } = await supabase.from(table).update(patch as never).eq("id", id);
@@ -1172,6 +1174,204 @@ export function LiveBoardPanel({
             />
           </Card>
         ))}
+    </div>
+  );
+}
+
+const DEMU_CITIES = ["ရန်ကုန်", "မန္တလေး", "နေပြည်တော်", "မော်လမြိုင်", "ပြည်"];
+
+export function DemuPanel({ rows, refresh }: { rows: DemuSchedule[]; refresh: () => void }) {
+  const [draft, setDraft] = useState({
+    city: DEMU_CITIES[0],
+    train_no: "",
+    route: "",
+    depart_time: "",
+    arrive_time: "",
+    fare_ordinary: "",
+    fare_upper: "",
+    note: "",
+  });
+
+  return (
+    <div className="space-y-2">
+      <Card>
+        <Label>DEMU ခရီးစဉ် အသစ်</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={draft.city}
+            onChange={(e) => setDraft({ ...draft, city: e.target.value })}
+          >
+            {DEMU_CITIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <Input
+            placeholder="ရထားအမှတ်"
+            value={draft.train_no}
+            onChange={(e) => setDraft({ ...draft, train_no: e.target.value })}
+          />
+          <Input
+            className="col-span-2"
+            placeholder="လမ်းကြောင်း (ဥပမာ ရန်ကုန် → ပဲခူး)"
+            value={draft.route}
+            onChange={(e) => setDraft({ ...draft, route: e.target.value })}
+          />
+          <Input
+            type="time"
+            value={draft.depart_time}
+            onChange={(e) => setDraft({ ...draft, depart_time: e.target.value })}
+          />
+          <Input
+            type="time"
+            value={draft.arrive_time}
+            onChange={(e) => setDraft({ ...draft, arrive_time: e.target.value })}
+          />
+          <Input
+            type="number"
+            placeholder="ရိုးရိုးခ"
+            value={draft.fare_ordinary}
+            onChange={(e) => setDraft({ ...draft, fare_ordinary: e.target.value })}
+          />
+          <Input
+            type="number"
+            placeholder="အထက်တန်းခ"
+            value={draft.fare_upper}
+            onChange={(e) => setDraft({ ...draft, fare_upper: e.target.value })}
+          />
+          <Input
+            className="col-span-2"
+            placeholder="မှတ်ချက်"
+            value={draft.note}
+            onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+          />
+        </div>
+        <Button
+          onClick={() => {
+            if (!draft.route.trim()) return;
+            insertRow(
+              "demu_schedules",
+              {
+                city: draft.city,
+                train_no: draft.train_no,
+                route: draft.route,
+                depart_time: draft.depart_time || null,
+                arrive_time: draft.arrive_time || null,
+                fare_ordinary: draft.fare_ordinary === "" ? null : Number(draft.fare_ordinary),
+                fare_upper: draft.fare_upper === "" ? null : Number(draft.fare_upper),
+                note: draft.note || null,
+                sort_order: rows.length + 1,
+              },
+              refresh,
+            );
+            setDraft({
+              city: draft.city,
+              train_no: "",
+              route: "",
+              depart_time: "",
+              arrive_time: "",
+              fare_ordinary: "",
+              fare_upper: "",
+              note: "",
+            });
+          }}
+        >
+          <Plus className="size-4" /> ထည့်မည်
+        </Button>
+      </Card>
+
+      {rows.map((row) => (
+        <Card key={row.id}>
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              defaultValue={row.city}
+              onChange={(e) => saveRow("demu_schedules", row.id, { city: e.target.value }, refresh)}
+            >
+              {[...new Set([...DEMU_CITIES, row.city])].map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <Input
+              defaultValue={row.train_no}
+              placeholder="ရထားအမှတ်"
+              onBlur={(e) => saveRow("demu_schedules", row.id, { train_no: e.target.value }, refresh)}
+            />
+            <Input
+              className="col-span-2"
+              defaultValue={row.route}
+              placeholder="လမ်းကြောင်း"
+              onBlur={(e) => saveRow("demu_schedules", row.id, { route: e.target.value }, refresh)}
+            />
+            <Input
+              type="time"
+              defaultValue={row.depart_time ?? ""}
+              onBlur={(e) =>
+                saveRow("demu_schedules", row.id, { depart_time: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              type="time"
+              defaultValue={row.arrive_time ?? ""}
+              onBlur={(e) =>
+                saveRow("demu_schedules", row.id, { arrive_time: e.target.value || null }, refresh)
+              }
+            />
+            <Input
+              type="number"
+              defaultValue={row.fare_ordinary ?? ""}
+              placeholder="ရိုးရိုးခ"
+              onBlur={(e) =>
+                saveRow(
+                  "demu_schedules",
+                  row.id,
+                  { fare_ordinary: e.target.value === "" ? null : Number(e.target.value) },
+                  refresh,
+                )
+              }
+            />
+            <Input
+              type="number"
+              defaultValue={row.fare_upper ?? ""}
+              placeholder="အထက်တန်းခ"
+              onBlur={(e) =>
+                saveRow(
+                  "demu_schedules",
+                  row.id,
+                  { fare_upper: e.target.value === "" ? null : Number(e.target.value) },
+                  refresh,
+                )
+              }
+            />
+            <Input
+              className="col-span-2"
+              defaultValue={row.note ?? ""}
+              placeholder="မှတ်ချက်"
+              onBlur={(e) =>
+                saveRow("demu_schedules", row.id, { note: e.target.value || null }, refresh)
+              }
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <VisibilityToggle
+              value={row.is_visible}
+              onChange={(v) => saveRow("demu_schedules", row.id, { is_visible: v }, refresh)}
+            />
+            <Button
+              variant="destructive"
+              size="icon"
+              className="ml-auto"
+              onClick={() => deleteRow("demu_schedules", row.id, refresh)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
