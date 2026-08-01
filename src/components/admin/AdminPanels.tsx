@@ -1223,6 +1223,15 @@ export function LiveBoardPanel({
 
 const DEMU_CITIES = ["ရန်ကုန်", "မန္တလေး", "နေပြည်တော်", "မော်လမြိုင်", "ပြည်"];
 
+const DEMU_ROUTES = [
+  { city: "ရန်ကုန်", route: "ရန်ကုန် → နေပြည်တော် → မန္တလေး (အဆန်)" },
+  { city: "မန္တလေး", route: "မန္တလေး → နေပြည်တော် → ရန်ကုန် (အစုန်)" },
+  { city: "ရန်ကုန်", route: "ရန်ကုန် → မော်လမြိုင် (အဆန်)" },
+  { city: "မော်လမြိုင်", route: "မော်လမြိုင် → ရန်ကုန် (အစုန်)" },
+  { city: "ရန်ကုန်", route: "ရန်ကုန် → ပြည် (အဆန်)" },
+  { city: "ပြည်", route: "ပြည် → ရန်ကုန် (အစုန်)" },
+];
+
 export function DemuPanel({ rows, refresh }: { rows: DemuSchedule[]; refresh: () => void }) {
   const [draft, setDraft] = useState({
     city: DEMU_CITIES[0],
