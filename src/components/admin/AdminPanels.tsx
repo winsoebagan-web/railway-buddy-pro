@@ -1248,6 +1248,21 @@ export function DemuPanel({ rows, refresh }: { rows: DemuSchedule[]; refresh: ()
     <div className="space-y-2">
       <Card>
         <Label>DEMU ခရီးစဉ် အသစ်</Label>
+        <select
+          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+          value={DEMU_ROUTES.some((r) => r.route === draft.route) ? draft.route : ""}
+          onChange={(e) => {
+            const p = DEMU_ROUTES.find((r) => r.route === e.target.value);
+            if (p) setDraft({ ...draft, route: p.route, city: p.city });
+          }}
+        >
+          <option value="">လမ်းကြောင်း ရွေးပါ (အဆန်/အစုန်)</option>
+          {DEMU_ROUTES.map((r) => (
+            <option key={r.route} value={r.route}>
+              {r.route}
+            </option>
+          ))}
+        </select>
         <div className="grid grid-cols-2 gap-2">
           <select
             className="h-9 rounded-md border border-input bg-background px-2 text-sm"
