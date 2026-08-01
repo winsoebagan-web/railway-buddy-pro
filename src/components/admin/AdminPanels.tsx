@@ -1298,7 +1298,7 @@ export function DemuPanel({ rows, refresh }: { rows: DemuSchedule[]; refresh: ()
           />
           <Input
             type="number"
-            placeholder="ရိုးရိုးခ"
+            placeholder="ပထမတန်းခ"
             value={draft.fare_ordinary}
             onChange={(e) => setDraft({ ...draft, fare_ordinary: e.target.value })}
           />
@@ -1391,7 +1391,7 @@ export function DemuPanel({ rows, refresh }: { rows: DemuSchedule[]; refresh: ()
             <Input
               type="number"
               defaultValue={row.fare_ordinary ?? ""}
-              placeholder="ရိုးရိုးခ"
+              placeholder="ပထမတန်းခ"
               onBlur={(e) =>
                 saveRow(
                   "demu_schedules",
