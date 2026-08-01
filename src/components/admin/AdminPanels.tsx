@@ -997,7 +997,13 @@ export function LiveBoardPanel({
   settings: LiveBoardSettings | null;
   refresh: () => void;
 }) {
-  const [draft, setDraft] = useState({ message: "", style: "plain", color: "#0ea5e9" });
+  const [draft, setDraft] = useState({
+    message: "",
+    style: "plain",
+    color: "#0ea5e9",
+    start_time: "",
+    end_time: "",
+  });
   const [busy, setBusy] = useState(false);
 
   async function saveSettings(patch: Record<string, unknown>) {
@@ -1096,15 +1102,35 @@ export function LiveBoardPanel({
             onChange={(e) => setDraft({ ...draft, color: e.target.value })}
           />
           <StyleSelect value={draft.style} onChange={(v) => setDraft({ ...draft, style: v })} />
+        </div>
+        <Label className="text-xs">ပြမည့်အချိန် (မှ — ထိ) · ဗလာထားလျှင် အမြဲပြမည်</Label>
+        <div className="flex gap-2">
+          <Input
+            type="time"
+            value={draft.start_time}
+            onChange={(e) => setDraft({ ...draft, start_time: e.target.value })}
+          />
+          <Input
+            type="time"
+            value={draft.end_time}
+            onChange={(e) => setDraft({ ...draft, end_time: e.target.value })}
+          />
           <Button
             onClick={() => {
               if (!draft.message.trim()) return;
               insertRow(
                 "live_notices",
-                { ...draft, message: draft.message.slice(0, 1000), sort_order: rows.length + 1 },
+                {
+                  message: draft.message.slice(0, 1000),
+                  style: draft.style,
+                  color: draft.color,
+                  start_time: draft.start_time || null,
+                  end_time: draft.end_time || null,
+                  sort_order: rows.length + 1,
+                },
                 refresh,
               );
-              setDraft({ message: "", style: "plain", color: "#0ea5e9" });
+              setDraft({ message: "", style: "plain", color: "#0ea5e9", start_time: "", end_time: "" });
             }}
           >
             <Plus className="size-4" /> ထည့်မည်
@@ -1150,6 +1176,23 @@ export function LiveBoardPanel({
                 <Trash2 className="size-4" />
               </Button>
             </div>
+            <Label className="text-xs">ပြမည့်အချိန် (မှ — ထိ) · ဗလာ = အမြဲပြ</Label>
+            <div className="flex gap-2">
+              <Input
+                type="time"
+                defaultValue={(row.start_time ?? "").slice(0, 5)}
+                onBlur={(e) =>
+                  saveRow("live_notices", row.id, { start_time: e.target.value || null }, refresh)
+                }
+              />
+              <Input
+                type="time"
+                defaultValue={(row.end_time ?? "").slice(0, 5)}
+                onBlur={(e) =>
+                  saveRow("live_notices", row.id, { end_time: e.target.value || null }, refresh)
+                }
+              />
+            </div>
             <Label className="text-xs">အသံ (mp3)</Label>
             <Input
               type="file"
@@ -1180,6 +1223,15 @@ export function LiveBoardPanel({
 
 const DEMU_CITIES = ["ရန်ကုန်", "မန္တလေး", "နေပြည်တော်", "မော်လမြိုင်", "ပြည်"];
 
+const DEMU_ROUTES = [
+  { city: "ရန်ကုန်", route: "ရန်ကုန် → နေပြည်တော် → မန္တလေး (အဆန်)" },
+  { city: "မန္တလေး", route: "မန္တလေး → နေပြည်တော် → ရန်ကုန် (အစုန်)" },
+  { city: "ရန်ကုန်", route: "ရန်ကုန် → မော်လမြိုင် (အဆန်)" },
+  { city: "မော်လမြိုင်", route: "မော်လမြိုင် → ရန်ကုန် (အစုန်)" },
+  { city: "ရန်ကုန်", route: "ရန်ကုန် → ပြည် (အဆန်)" },
+  { city: "ပြည်", route: "ပြည် → ရန်ကုန် (အစုန်)" },
+];
+
 export function DemuPanel({ rows, refresh }: { rows: DemuSchedule[]; refresh: () => void }) {
   const [draft, setDraft] = useState({
     city: DEMU_CITIES[0],
@@ -1196,6 +1248,21 @@ export function DemuPanel({ rows, refresh }: { rows: DemuSchedule[]; refresh: ()
     <div className="space-y-2">
       <Card>
         <Label>DEMU ခရီးစဉ် အသစ်</Label>
+        <select
+          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+          value={DEMU_ROUTES.some((r) => r.route === draft.route) ? draft.route : ""}
+          onChange={(e) => {
+            const p = DEMU_ROUTES.find((r) => r.route === e.target.value);
+            if (p) setDraft({ ...draft, route: p.route, city: p.city });
+          }}
+        >
+          <option value="">လမ်းကြောင်း ရွေးပါ (အဆန်/အစုန်)</option>
+          {DEMU_ROUTES.map((r) => (
+            <option key={r.route} value={r.route}>
+              {r.route}
+            </option>
+          ))}
+        </select>
         <div className="grid grid-cols-2 gap-2">
           <select
             className="h-9 rounded-md border border-input bg-background px-2 text-sm"
