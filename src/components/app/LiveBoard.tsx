@@ -86,7 +86,17 @@ export function LiveBoard({
     [trains, lead, current, settings?.auto_enabled],
   );
   const soon = auto.filter((a) => a.soon);
-  const rows = notices.filter((n) => n.is_visible).sort((a, b) => a.sort_order - b.sort_order);
+  const inWindow = (n: LiveNotice) => {
+    const s = minutesOf(n.start_time);
+    const e = minutesOf(n.end_time);
+    if (s < 0 && e < 0) return true;
+    if (s >= 0 && e >= 0) return s <= e ? current >= s && current <= e : current >= s || current <= e;
+    if (s >= 0) return current >= s;
+    return current <= e;
+  };
+  const rows = notices
+    .filter((n) => n.is_visible && inWindow(n))
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   useChime(settings?.sound_url, soon.map((s) => s.key).join(","));
   useChime(rows[0]?.sound_url, rows[0]?.id ?? "");
