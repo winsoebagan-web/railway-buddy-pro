@@ -1102,15 +1102,35 @@ export function LiveBoardPanel({
             onChange={(e) => setDraft({ ...draft, color: e.target.value })}
           />
           <StyleSelect value={draft.style} onChange={(v) => setDraft({ ...draft, style: v })} />
+        </div>
+        <Label className="text-xs">ပြမည့်အချိန် (မှ — ထိ) · ဗလာထားလျှင် အမြဲပြမည်</Label>
+        <div className="flex gap-2">
+          <Input
+            type="time"
+            value={draft.start_time}
+            onChange={(e) => setDraft({ ...draft, start_time: e.target.value })}
+          />
+          <Input
+            type="time"
+            value={draft.end_time}
+            onChange={(e) => setDraft({ ...draft, end_time: e.target.value })}
+          />
           <Button
             onClick={() => {
               if (!draft.message.trim()) return;
               insertRow(
                 "live_notices",
-                { ...draft, message: draft.message.slice(0, 1000), sort_order: rows.length + 1 },
+                {
+                  message: draft.message.slice(0, 1000),
+                  style: draft.style,
+                  color: draft.color,
+                  start_time: draft.start_time || null,
+                  end_time: draft.end_time || null,
+                  sort_order: rows.length + 1,
+                },
                 refresh,
               );
-              setDraft({ message: "", style: "plain", color: "#0ea5e9" });
+              setDraft({ message: "", style: "plain", color: "#0ea5e9", start_time: "", end_time: "" });
             }}
           >
             <Plus className="size-4" /> ထည့်မည်
