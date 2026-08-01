@@ -66,8 +66,9 @@ export function DemuSection({ rows }: { rows: DemuSchedule[] }) {
                 <th className="px-2 py-2">လမ်းကြောင်း</th>
                 <th className="px-2 py-2">ထွက်</th>
                 <th className="px-2 py-2">ဆိုက်</th>
-                <th className="px-2 py-2">ရိုးရိုး</th>
-                <th className="px-2 py-2">အထက်</th>
+                <th className="px-2 py-2">ပထမတန်း</th>
+                <th className="px-2 py-2">အထက်တန်း</th>
+
               </tr>
             </thead>
             <tbody>
