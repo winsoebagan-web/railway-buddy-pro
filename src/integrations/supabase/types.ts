@@ -138,31 +138,37 @@ export type Database = {
         Row: {
           color: string
           created_at: string
+          end_time: string | null
           id: string
           is_visible: boolean
           message: string
           sort_order: number
           sound_url: string | null
+          start_time: string | null
           style: string
         }
         Insert: {
           color?: string
           created_at?: string
+          end_time?: string | null
           id?: string
           is_visible?: boolean
           message: string
           sort_order?: number
           sound_url?: string | null
+          start_time?: string | null
           style?: string
         }
         Update: {
           color?: string
           created_at?: string
+          end_time?: string | null
           id?: string
           is_visible?: boolean
           message?: string
           sort_order?: number
           sound_url?: string | null
+          start_time?: string | null
           style?: string
         }
         Relationships: []
