@@ -1176,6 +1176,23 @@ export function LiveBoardPanel({
                 <Trash2 className="size-4" />
               </Button>
             </div>
+            <Label className="text-xs">ပြမည့်အချိန် (မှ — ထိ) · ဗလာ = အမြဲပြ</Label>
+            <div className="flex gap-2">
+              <Input
+                type="time"
+                defaultValue={(row.start_time ?? "").slice(0, 5)}
+                onBlur={(e) =>
+                  saveRow("live_notices", row.id, { start_time: e.target.value || null }, refresh)
+                }
+              />
+              <Input
+                type="time"
+                defaultValue={(row.end_time ?? "").slice(0, 5)}
+                onBlur={(e) =>
+                  saveRow("live_notices", row.id, { end_time: e.target.value || null }, refresh)
+                }
+              />
+            </div>
             <Label className="text-xs">အသံ (mp3)</Label>
             <Input
               type="file"
