@@ -997,7 +997,13 @@ export function LiveBoardPanel({
   settings: LiveBoardSettings | null;
   refresh: () => void;
 }) {
-  const [draft, setDraft] = useState({ message: "", style: "plain", color: "#0ea5e9" });
+  const [draft, setDraft] = useState({
+    message: "",
+    style: "plain",
+    color: "#0ea5e9",
+    start_time: "",
+    end_time: "",
+  });
   const [busy, setBusy] = useState(false);
 
   async function saveSettings(patch: Record<string, unknown>) {
