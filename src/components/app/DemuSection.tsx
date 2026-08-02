@@ -80,7 +80,7 @@ export function DemuSection({ rows }: { rows: DemuSchedule[] }) {
                   <td className="px-2 py-2 font-semibold">
                     {r.route}
                     {r.note ? (
-                      <span className="block text-[10px] font-normal text-muted-foreground">
+                      <span className="mt-1 block whitespace-pre-line text-[10px] font-normal leading-relaxed text-muted-foreground">
                         {r.note}
                       </span>
                     ) : null}
