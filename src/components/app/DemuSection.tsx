@@ -73,32 +73,11 @@ export function DemuSection({ rows }: { rows: DemuSchedule[] }) {
             </thead>
             <tbody>
               {list.map((r, i) => (
-                <tr key={r.id} className={i % 2 === 0 ? "bg-card" : "bg-leaf-soft/40"}>
-                  <td className="px-3 py-2 font-bold text-primary whitespace-nowrap">
-                    {mmNum(r.train_no)}
-                  </td>
-                  <td className="px-2 py-2 font-semibold">
-                    {r.route}
-                    {r.note ? (
-                      <span className="mt-1 block whitespace-pre-line text-[10px] font-normal leading-relaxed text-muted-foreground">
-                        {r.note}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-2 py-2 whitespace-nowrap text-primary">{mmTime(r.depart_time)}</td>
-                  <td className="px-2 py-2 whitespace-nowrap text-secondary-foreground">
-                    {mmTime(r.arrive_time)}
-                  </td>
-                  <td className="px-2 py-2 whitespace-nowrap font-semibold">
-                    {r.fare_ordinary === null ? "—" : mmMoney(r.fare_ordinary)}
-                  </td>
-                  <td className="px-2 py-2 whitespace-nowrap font-semibold text-sun-foreground">
-                    {r.fare_upper === null ? "—" : mmMoney(r.fare_upper)}
-                  </td>
-                </tr>
+                <DemuRow key={r.id} row={r} striped={i % 2 !== 0} />
               ))}
             </tbody>
           </table>
+
         </div>
       </div>
     </div>
