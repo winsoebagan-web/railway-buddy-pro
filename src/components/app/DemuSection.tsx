@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { TrainFront } from "lucide-react";
+import { TrainFront, MapPin, ChevronDown } from "lucide-react";
 import type { DemuSchedule } from "@/lib/data";
 import { mmMoney, mmNum, mmTime } from "@/lib/mm";
 
@@ -148,7 +148,7 @@ function DemuRow({ row, striped }: { row: DemuSchedule; striped: boolean }) {
                   <span className="flex-1 text-[11px] font-semibold leading-tight">{s.name}</span>
                   {s.time ? (
                     <span className="rounded-md bg-card/80 px-1.5 py-0.5 text-[11px] font-bold tabular-nums">
-                      {mmTime(s.time)}
+                      {s.time}
                     </span>
                   ) : null}
                 </li>
