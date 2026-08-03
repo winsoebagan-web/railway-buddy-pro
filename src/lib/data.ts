@@ -114,6 +114,7 @@ export type AppBundle = {
   liveNotices: LiveNotice[];
   liveSettings: LiveBoardSettings | null;
   demu: DemuSchedule[];
+  noticeLetters: NoticeLetter[];
   fetchedAt: string;
 };
 
@@ -131,6 +132,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     liveNotices,
     liveSettings,
     demu,
+    noticeLetters,
   ] = await Promise.all([
     fetchStations(),
     fetchTrains(),
@@ -144,6 +146,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     fetchLiveNotices(),
     fetchLiveBoardSettings(),
     fetchDemuSchedules(),
+    fetchNoticeLetters(),
   ]);
   return {
     stations,
@@ -158,6 +161,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     liveNotices,
     liveSettings,
     demu,
+    noticeLetters,
     fetchedAt: new Date().toISOString(),
   };
 }
