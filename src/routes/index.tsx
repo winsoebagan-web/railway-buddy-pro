@@ -10,6 +10,7 @@ import { ScheduleSection } from "@/components/app/ScheduleSection";
 import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
 import { ReportsSection } from "@/components/app/ReportsSection";
+import { NoticeLetterSection } from "@/components/app/NoticeLetterSection";
 import { SuggestionsSection } from "@/components/app/SuggestionsSection";
 import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
