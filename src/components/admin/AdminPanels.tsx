@@ -9,6 +9,7 @@ import type {
   Marquee,
   Post,
   Report,
+  NoticeLetter,
   Section,
   SplashSlide,
   Station,
