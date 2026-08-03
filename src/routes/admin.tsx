@@ -8,6 +8,7 @@ import {
   fetchDemuSchedules,
   fetchLiveBoardSettings,
   fetchLiveNotices,
+  fetchNoticeLetters,
   fetchMarquees,
   fetchPosts,
   fetchReports,
@@ -21,6 +22,7 @@ import {
   type DemuSchedule,
   type LiveBoardSettings,
   type LiveNotice,
+  type NoticeLetter,
   type Marquee,
   type Post,
   type Report,
@@ -36,6 +38,7 @@ import {
   LiveBoardPanel,
   MarqueesPanel,
   PostsPanel,
+  NoticeLettersPanel,
   ReportsPanel,
   SectionsPanel,
   SplashPanel,
@@ -76,6 +79,7 @@ type AdminData = {
   liveNotices: LiveNotice[];
   liveSettings: LiveBoardSettings | null;
   demu: DemuSchedule[];
+  noticeLetters: NoticeLetter[];
   viewers: number;
 };
 
@@ -92,6 +96,7 @@ const EMPTY: AdminData = {
   liveNotices: [],
   liveSettings: null,
   demu: [],
+  noticeLetters: [],
   viewers: 0,
 };
 
@@ -100,7 +105,7 @@ const TABS = [
   { key: "trains", label: "ရထားများ" },
   { key: "stations", label: "ဘူတာများ" },
   { key: "posts", label: "ပို့စ်များ" },
-  { key: "reports", label: "တင်ပြချက်" },
+  { key: "reports", label: "အသိပေးစာ" },
   { key: "suggestions", label: "အကြံပြုလွှာ" },
   { key: "audios", label: "အသံဖိုင်" },
   { key: "live", label: "အသိပေးဘုတ်" },
@@ -129,6 +134,7 @@ function AdminPage() {
       liveNotices,
       liveSettings,
       demu,
+      noticeLetters,
       viewers,
     ] = await Promise.all([
       fetchStations(),
@@ -143,6 +149,7 @@ function AdminPage() {
       fetchLiveNotices(),
       fetchLiveBoardSettings(),
       fetchDemuSchedules(),
+      fetchNoticeLetters(),
       fetchViewerCount(),
     ]);
     setData({
@@ -158,6 +165,7 @@ function AdminPage() {
       liveNotices,
       liveSettings,
       demu,
+      noticeLetters,
       viewers,
     });
   }, []);
@@ -234,7 +242,10 @@ function AdminPage() {
             <PostsPanel rows={data.posts} refresh={load} />
           </TabsContent>
           <TabsContent value="reports" className="mt-4">
-            <ReportsPanel rows={data.reports} refresh={load} />
+            <div className="space-y-4">
+              <NoticeLettersPanel rows={data.noticeLetters} refresh={load} />
+              <ReportsPanel rows={data.reports} refresh={load} />
+            </div>
           </TabsContent>
           <TabsContent value="suggestions" className="mt-4">
             <SuggestionsPanel rows={data.suggestions} refresh={load} />
