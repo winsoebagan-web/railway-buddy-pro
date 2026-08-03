@@ -37,6 +37,7 @@ type TableName =
   | "splash_slides"
   | "sections"
   | "live_notices"
+  | "notice_letters"
   | "demu_schedules";
 
 export async function saveRow(table: TableName, id: string, patch: Row, onDone: () => void) {
