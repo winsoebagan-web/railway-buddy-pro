@@ -628,6 +628,130 @@ export function PostsPanel({ rows, refresh }: { rows: Post[]; refresh: () => voi
   );
 }
 
+/* ----------------------------------------------------------- notice letters */
+
+const LETTER_STYLES = [
+  { value: "plain", label: "ရိုးရိုး" },
+  { value: "marquee", label: "စာတန်းပြေး" },
+  { value: "blink", label: "မိတ်တုတ်မိတ်တုတ်" },
+];
+
+export function NoticeLettersPanel({
+  rows,
+  refresh,
+}: {
+  rows: NoticeLetter[];
+  refresh: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+
+  async function add() {
+    if (!title.trim() && !body.trim()) return toast.error("ခေါင်းစဉ် သို့ အကြောင်းအရာ ထည့်ပါ။");
+    await insertRow(
+      "notice_letters",
+      {
+        title: title.trim(),
+        body: body.slice(0, 300),
+        style: "plain",
+        color: "#0284c7",
+        is_visible: true,
+        sort_order: rows.length,
+      },
+      refresh,
+    );
+    setTitle("");
+    setBody("");
+  }
+
+  return (
+    <div className="space-y-3">
+      <Card>
+        <Label>အသိပေးစာ အသစ်</Label>
+        <Input placeholder="ခေါင်းစဉ်" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <Textarea
+          rows={3}
+          maxLength={300}
+          placeholder="အကြောင်းအရာ (စာလုံး ၃၀၀)"
+          value={body}
+          onChange={(e) => setBody(e.target.value.slice(0, 300))}
+        />
+        <p className="text-[11px] text-muted-foreground">{body.length}/300</p>
+        <Button onClick={add}>
+          <Plus className="size-4" /> ထည့်မည်
+        </Button>
+      </Card>
+
+      {rows
+        .slice()
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((row) => (
+          <Card key={row.id}>
+            <Input
+              defaultValue={row.title}
+              placeholder="ခေါင်းစဉ်"
+              onBlur={(e) => saveRow("notice_letters", row.id, { title: e.target.value }, refresh)}
+            />
+            <Textarea
+              rows={3}
+              maxLength={300}
+              defaultValue={row.body}
+              placeholder="အကြောင်းအရာ (စာလုံး ၃၀၀)"
+              onBlur={(e) =>
+                saveRow("notice_letters", row.id, { body: e.target.value.slice(0, 300) }, refresh)
+              }
+            />
+            <div className="grid grid-cols-3 gap-2">
+              <select
+                className="h-9 rounded-md border border-input bg-background px-2 text-xs"
+                defaultValue={row.style}
+                onChange={(e) =>
+                  saveRow("notice_letters", row.id, { style: e.target.value }, refresh)
+                }
+              >
+                {LETTER_STYLES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+              <Input
+                type="color"
+                defaultValue={row.color}
+                onBlur={(e) => saveRow("notice_letters", row.id, { color: e.target.value }, refresh)}
+              />
+              <Input
+                type="number"
+                defaultValue={row.sort_order}
+                onBlur={(e) =>
+                  saveRow(
+                    "notice_letters",
+                    row.id,
+                    { sort_order: Number(e.target.value) },
+                    refresh,
+                  )
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <VisibilityToggle
+                value={row.is_visible}
+                onChange={(v) => saveRow("notice_letters", row.id, { is_visible: v }, refresh)}
+              />
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => deleteRow("notice_letters", row.id, refresh)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          </Card>
+        ))}
+    </div>
+  );
+}
+
 /* ------------------------------------------------- reports and suggestions */
 
 export function ReportsPanel({ rows, refresh }: { rows: Report[]; refresh: () => void }) {
