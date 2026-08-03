@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { TrainFront, MapPin, ChevronDown } from "lucide-react";
+import { TrainFront, MapPin, ChevronDown, Ticket, PhoneCall, Mail } from "lucide-react";
 import type { DemuSchedule } from "@/lib/data";
 import { mmMoney, mmNum, mmTime } from "@/lib/mm";
 
@@ -34,7 +34,7 @@ export function DemuSection({ rows }: { rows: DemuSchedule[] }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {cities.map((c) => (
           <button
             key={c}
@@ -49,7 +49,36 @@ export function DemuSection({ rows }: { rows: DemuSchedule[] }) {
             {c}
           </button>
         ))}
+
+        <a
+          href="https://ortp.railways.gov.mm/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-full bg-sun/30 px-3 py-1.5 text-xs font-bold shadow-card transition active:scale-95"
+        >
+          <Ticket className="size-3.5 text-primary" />
+          <span className="text-primary">ရထား</span>
+          <span className="text-secondary-foreground">လက်မှတ်</span>
+          <span className="text-sun-foreground">ဝယ်ရန်</span>
+        </a>
       </div>
+
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 shadow-card">
+        <span className="text-xs font-bold text-primary">ဆက်သွယ်ရန်</span>
+        <a
+          href="tel:1188"
+          className="inline-flex items-center gap-1.5 rounded-full bg-leaf-soft px-2.5 py-1 text-[11px] font-bold text-secondary-foreground"
+        >
+          <PhoneCall className="size-3" /> Hotline: {mmNum(1188)}
+        </a>
+        <a
+          href="mailto:mrortpcallcenter@gmail.com"
+          className="inline-flex items-center gap-1.5 rounded-full bg-sky-soft px-2.5 py-1 text-[11px] font-bold text-primary"
+        >
+          <Mail className="size-3" /> mrortpcallcenter@gmail.com
+        </a>
+      </div>
+
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <div className="surface-header flex items-center gap-2 px-4 py-2.5">
