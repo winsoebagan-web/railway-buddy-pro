@@ -162,12 +162,15 @@ function Home() {
               </>
             ) : null}
             {section.key === "reports" ? (
-              <ReportsSection
-                reports={bundle.reports}
-                stations={bundle.stations}
-                trains={bundle.trains}
-                onChanged={refresh}
-              />
+              <>
+                <NoticeLetterSection rows={bundle.noticeLetters} />
+                <ReportsSection
+                  reports={bundle.reports}
+                  stations={bundle.stations}
+                  trains={bundle.trains}
+                  onChanged={refresh}
+                />
+              </>
             ) : null}
             {section.key === "suggestions" ? (
               <SuggestionsSection suggestions={bundle.suggestions} onChanged={refresh} />
