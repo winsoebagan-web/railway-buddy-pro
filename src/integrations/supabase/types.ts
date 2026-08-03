@@ -203,6 +203,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notice_letters: {
+        Row: {
+          body: string
+          color: string
+          created_at: string
+          id: string
+          is_visible: boolean
+          sort_order: number
+          style: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          color?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          sort_order?: number
+          style?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          color?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          sort_order?: number
+          style?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           body: string

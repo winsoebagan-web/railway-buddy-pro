@@ -14,6 +14,7 @@ export type Section = Tables<"sections">;
 export type LiveNotice = Tables<"live_notices">;
 export type LiveBoardSettings = Tables<"live_board_settings">;
 export type DemuSchedule = Tables<"demu_schedules">;
+export type NoticeLetter = Tables<"notice_letters">;
 
 export type TrainWithStops = Train & { stops: TrainStop[] };
 
@@ -83,6 +84,11 @@ export async function fetchDemuSchedules(): Promise<DemuSchedule[]> {
   return unwrap(await supabase.from("demu_schedules").select("*").order("sort_order"));
 }
 
+export async function fetchNoticeLetters(): Promise<NoticeLetter[]> {
+  return unwrap(await supabase.from("notice_letters").select("*").order("sort_order"));
+}
+
+
 export async function fetchViewerCount(): Promise<number> {
   const { data } = await supabase.from("viewer_counter").select("count").eq("id", 1).maybeSingle();
   return Number(data?.count ?? 0);
@@ -108,6 +114,7 @@ export type AppBundle = {
   liveNotices: LiveNotice[];
   liveSettings: LiveBoardSettings | null;
   demu: DemuSchedule[];
+  noticeLetters: NoticeLetter[];
   fetchedAt: string;
 };
 
@@ -125,6 +132,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     liveNotices,
     liveSettings,
     demu,
+    noticeLetters,
   ] = await Promise.all([
     fetchStations(),
     fetchTrains(),
@@ -138,6 +146,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     fetchLiveNotices(),
     fetchLiveBoardSettings(),
     fetchDemuSchedules(),
+    fetchNoticeLetters(),
   ]);
   return {
     stations,
@@ -152,6 +161,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     liveNotices,
     liveSettings,
     demu,
+    noticeLetters,
     fetchedAt: new Date().toISOString(),
   };
 }

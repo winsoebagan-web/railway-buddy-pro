@@ -10,6 +10,7 @@ import { ScheduleSection } from "@/components/app/ScheduleSection";
 import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
 import { ReportsSection } from "@/components/app/ReportsSection";
+import { NoticeLetterSection } from "@/components/app/NoticeLetterSection";
 import { SuggestionsSection } from "@/components/app/SuggestionsSection";
 import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
@@ -48,6 +49,7 @@ const EMPTY: AppBundle = {
   liveNotices: [],
   liveSettings: null,
   demu: [],
+  noticeLetters: [],
   fetchedAt: "",
 };
 
@@ -160,12 +162,15 @@ function Home() {
               </>
             ) : null}
             {section.key === "reports" ? (
-              <ReportsSection
-                reports={bundle.reports}
-                stations={bundle.stations}
-                trains={bundle.trains}
-                onChanged={refresh}
-              />
+              <>
+                <NoticeLetterSection rows={bundle.noticeLetters} />
+                <ReportsSection
+                  reports={bundle.reports}
+                  stations={bundle.stations}
+                  trains={bundle.trains}
+                  onChanged={refresh}
+                />
+              </>
             ) : null}
             {section.key === "suggestions" ? (
               <SuggestionsSection suggestions={bundle.suggestions} onChanged={refresh} />
