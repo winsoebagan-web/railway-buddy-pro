@@ -84,6 +84,11 @@ export async function fetchDemuSchedules(): Promise<DemuSchedule[]> {
   return unwrap(await supabase.from("demu_schedules").select("*").order("sort_order"));
 }
 
+export async function fetchNoticeLetters(): Promise<NoticeLetter[]> {
+  return unwrap(await supabase.from("notice_letters").select("*").order("sort_order"));
+}
+
+
 export async function fetchViewerCount(): Promise<number> {
   const { data } = await supabase.from("viewer_counter").select("count").eq("id", 1).maybeSingle();
   return Number(data?.count ?? 0);
