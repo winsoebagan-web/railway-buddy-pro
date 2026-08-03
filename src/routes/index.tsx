@@ -48,6 +48,7 @@ const EMPTY: AppBundle = {
   liveNotices: [],
   liveSettings: null,
   demu: [],
+  noticeLetters: [],
   fetchedAt: "",
 };
 
