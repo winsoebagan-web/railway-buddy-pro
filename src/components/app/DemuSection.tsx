@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { TrainFront, MapPin, ChevronDown } from "lucide-react";
+import { TrainFront, MapPin, ChevronDown, Ticket, PhoneCall, Mail } from "lucide-react";
 import type { DemuSchedule } from "@/lib/data";
 import { mmMoney, mmNum, mmTime } from "@/lib/mm";
 
