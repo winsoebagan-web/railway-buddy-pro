@@ -14,6 +14,7 @@ export type Section = Tables<"sections">;
 export type LiveNotice = Tables<"live_notices">;
 export type LiveBoardSettings = Tables<"live_board_settings">;
 export type DemuSchedule = Tables<"demu_schedules">;
+export type NoticeLetter = Tables<"notice_letters">;
 
 export type TrainWithStops = Train & { stops: TrainStop[] };
 
