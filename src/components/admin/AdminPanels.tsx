@@ -322,26 +322,8 @@ export function TrainsPanel({
             />
           </div>
 
-          <div className="rounded-lg border border-dashed border-border bg-muted/40 p-2">
-            <Label className="text-xs">
-              အမှတ် {train.number || train.name} — ပင်မဘူတာ ထွက်ခွာချိန်
-            </Label>
-            <div className="mt-1 flex items-center gap-2">
-              <Input
-                key={`${train.id}-${originDepart(train)}`}
-                className="h-9 w-36"
-                type="time"
-                defaultValue={originDepart(train)}
-                onBlur={(e) => {
-                  const v = e.target.value;
-                  if (v && v !== originDepart(train)) shiftTrainTimes(train, v, refresh);
-                }}
-              />
-              <span className="text-[11px] text-muted-foreground">
-                ပြောင်းလိုက်လျှင် ကြားဘူတာ ဆိုက်/ထွက်ချိန်များ အချိုးကျ auto ရွှေ့ပါမည်။
-              </span>
-            </div>
-          </div>
+          <DepartureShiftEditor train={train} refresh={refresh} />
+
 
 
 
