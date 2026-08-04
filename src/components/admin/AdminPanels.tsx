@@ -124,6 +124,99 @@ export async function shiftTrainTimes(
   onDone();
 }
 
+/** ပင်မဘူတာ ထွက်ခွာချိန် ပြောင်းမည့် Before/After preview */
+function DepartureShiftEditor({
+  train,
+  refresh,
+}: {
+  train: TrainWithStops;
+  refresh: () => void;
+}) {
+  const current = originDepart(train);
+  const [value, setValue] = useState(current);
+  const [busy, setBusy] = useState(false);
+
+  const base = toMin(current);
+  const target = toMin(value);
+  const delta = base !== null && target !== null ? target - base : 0;
+  const stops = [...(train.stops ?? [])].sort((a, b) => a.stop_order - b.stop_order);
+  const dirty = value !== "" && value !== current && delta !== 0;
+
+  return (
+    <div className="rounded-lg border border-dashed border-border bg-muted/40 p-2">
+      <Label className="text-xs">
+        အမှတ် {train.number || train.name} — ပင်မဘူတာ ထွက်ခွာချိန်
+      </Label>
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+        <Input
+          key={`${train.id}-${current}`}
+          className="h-9 w-36"
+          type="time"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <span className="text-[11px] text-muted-foreground">
+          ပြောင်းလိုက်လျှင် ကြားဘူတာ ဆိုက်/ထွက်ချိန်များ အချိုးကျ auto ရွှေ့ပါမည်။
+        </span>
+      </div>
+
+      {dirty ? (
+        <div className="mt-2 space-y-2">
+          <p className="text-[11px] font-semibold text-primary">
+            ကြိုတင်ကြည့်ရှုမှု (မသိမ်းရသေးပါ) — ရွှေ့မည့်အချိန် {delta > 0 ? "+" : ""}
+            {delta} မိနစ်
+          </p>
+          <div className="max-h-60 overflow-y-auto rounded-md border border-border bg-background">
+            <table className="w-full text-[11px]">
+              <thead className="sticky top-0 bg-muted text-muted-foreground">
+                <tr>
+                  <th className="p-1 text-left">ဘူတာ</th>
+                  <th className="p-1">ယခု (ဆိုက်/ထွက်)</th>
+                  <th className="p-1">ပြောင်းပြီး (ဆိုက်/ထွက်)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stops.map((s) => {
+                  const a = toMin(s.arrive_time);
+                  const d = toMin(s.depart_time);
+                  return (
+                    <tr key={s.id} className="border-t border-border">
+                      <td className="p-1">{s.station_name}</td>
+                      <td className="p-1 text-center text-muted-foreground line-through">
+                        {s.arrive_time ?? "—"} / {s.depart_time ?? "—"}
+                      </td>
+                      <td className="p-1 text-center font-semibold text-primary">
+                        {a !== null ? toHHMM(a + delta) : "—"} /{" "}
+                        {d !== null ? toHHMM(d + delta) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                await shiftTrainTimes(train, value, refresh);
+                setBusy(false);
+              }}
+            >
+              အတည်ပြု သိမ်းမည်
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setValue(current)}>
+              ပယ်ဖျက်
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 
 function VisibilityToggle({
   value,
