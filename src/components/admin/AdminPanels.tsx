@@ -68,6 +68,63 @@ function Card({ children }: { children: React.ReactNode }) {
   return <div className="space-y-2 rounded-xl border border-border bg-card p-3">{children}</div>;
 }
 
+/* ---------------------------------------------- train departure time shift */
+
+function toMin(t?: string | null): number | null {
+  if (!t) return null;
+  const [h, m] = t.split(":").map(Number);
+  if (Number.isNaN(h)) return null;
+  return h * 60 + (m || 0);
+}
+
+function toHHMM(mins: number): string {
+  const v = ((mins % 1440) + 1440) % 1440;
+  return `${String(Math.floor(v / 60)).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`;
+}
+
+/** ပင်မဘူတာ ထွက်ခွာချိန် (ပထမဆုံး ရပ်တန့်ချက်) */
+export function originDepart(train: TrainWithStops): string {
+  const first = [...(train.stops ?? [])].sort((a, b) => a.stop_order - b.stop_order)[0];
+  return first?.depart_time ?? first?.arrive_time ?? "";
+}
+
+/** ထွက်ခွာချိန် ပြောင်းလိုက်လျှင် ကြားဘူတာအားလုံးကို အချိုးကျ ရွှေ့ပေးသည် */
+export async function shiftTrainTimes(
+  train: TrainWithStops,
+  newDepart: string,
+  onDone: () => void,
+) {
+  const base = toMin(originDepart(train));
+  const target = toMin(newDepart);
+  if (base === null || target === null) {
+    toast.error("ပင်မဘူတာ ထွက်ခွာချိန် မရှိပါ။");
+    return;
+  }
+  const delta = target - base;
+  if (delta === 0) return;
+
+  const updates = (train.stops ?? []).map((s) => {
+    const patch: Row = {};
+    const a = toMin(s.arrive_time);
+    const d = toMin(s.depart_time);
+    if (a !== null) patch.arrive_time = toHHMM(a + delta);
+    if (d !== null) patch.depart_time = toHHMM(d + delta);
+    return { id: s.id, patch };
+  });
+
+  for (const u of updates) {
+    if (Object.keys(u.patch).length === 0) continue;
+    const { error } = await supabase
+      .from("train_stops")
+      .update(u.patch as never)
+      .eq("id", u.id);
+    if (error) return toast.error(error.message);
+  }
+  toast.success("ကြားဘူတာအချိန်များ အလိုအလျောက် ပြောင်းပြီးပါပြီ။");
+  onDone();
+}
+
+
 function VisibilityToggle({
   value,
   onChange,
