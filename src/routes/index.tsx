@@ -9,7 +9,6 @@ import { MarqueeBar } from "@/components/app/MarqueeBar";
 import { ScheduleSection } from "@/components/app/ScheduleSection";
 import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
-import { ReportsSection } from "@/components/app/ReportsSection";
 import { NoticeLetterSection } from "@/components/app/NoticeLetterSection";
 import { SuggestionsSection } from "@/components/app/SuggestionsSection";
 import { AudioSection } from "@/components/app/AudioSection";
@@ -162,16 +161,9 @@ function Home() {
               </>
             ) : null}
             {section.key === "reports" ? (
-              <>
-                <NoticeLetterSection rows={bundle.noticeLetters} />
-                <ReportsSection
-                  reports={bundle.reports}
-                  stations={bundle.stations}
-                  trains={bundle.trains}
-                  onChanged={refresh}
-                />
-              </>
+              <NoticeLetterSection rows={bundle.noticeLetters} />
             ) : null}
+
             {section.key === "suggestions" ? (
               <SuggestionsSection suggestions={bundle.suggestions} onChanged={refresh} />
             ) : null}

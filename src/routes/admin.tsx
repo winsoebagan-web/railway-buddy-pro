@@ -39,7 +39,6 @@ import {
   MarqueesPanel,
   PostsPanel,
   NoticeLettersPanel,
-  ReportsPanel,
   SectionsPanel,
   SplashPanel,
   StationsPanel,
@@ -242,11 +241,9 @@ function AdminPage() {
             <PostsPanel rows={data.posts} refresh={load} />
           </TabsContent>
           <TabsContent value="reports" className="mt-4">
-            <div className="space-y-4">
-              <NoticeLettersPanel rows={data.noticeLetters} refresh={load} />
-              <ReportsPanel rows={data.reports} refresh={load} />
-            </div>
+            <NoticeLettersPanel rows={data.noticeLetters} refresh={load} />
           </TabsContent>
+
           <TabsContent value="suggestions" className="mt-4">
             <SuggestionsPanel rows={data.suggestions} refresh={load} />
           </TabsContent>
