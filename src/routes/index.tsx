@@ -54,6 +54,7 @@ const EMPTY: AppBundle = {
 };
 
 function Home() {
+  useVersionCheck();
   const hydrated = useHydrated();
   const online = useOnline();
   const { data, loading, refresh } = useCached<AppBundle>("app-bundle", fetchAppBundle);
