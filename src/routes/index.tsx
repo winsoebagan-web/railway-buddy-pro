@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Eye, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { fetchAppBundle, bumpViewers, fetchViewerCount, type AppBundle } from "@/lib/data";
 import { useCached, useOnline, useHydrated, readCache, writeCache } from "@/lib/offline";
+import { useVersionCheck } from "@/lib/version";
 import { mmNum } from "@/lib/mm";
 import { Splash } from "@/components/app/Splash";
 import { MarqueeBar } from "@/components/app/MarqueeBar";
@@ -53,6 +54,7 @@ const EMPTY: AppBundle = {
 };
 
 function Home() {
+  useVersionCheck();
   const hydrated = useHydrated();
   const online = useOnline();
   const { data, loading, refresh } = useCached<AppBundle>("app-bundle", fetchAppBundle);
