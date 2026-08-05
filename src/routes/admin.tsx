@@ -39,7 +39,6 @@ import {
   MarqueesPanel,
   PostsPanel,
   NoticeLettersPanel,
-  ReportsPanel,
   SectionsPanel,
   SplashPanel,
   StationsPanel,
