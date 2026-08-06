@@ -1,13 +1,24 @@
-import { Mail } from "lucide-react";
-import type { NoticeLetter } from "@/lib/data";
+import { Mail, Video } from "lucide-react";
+import type { NoticeLetter, NoticeVideo } from "@/lib/data";
 import { liveStyleClass } from "@/components/app/LiveBoard";
 
-export function NoticeLetterSection({ rows }: { rows?: NoticeLetter[] | null }) {
+export function NoticeLetterSection({
+  rows,
+  videos,
+}: {
+  rows?: NoticeLetter[] | null;
+  videos?: NoticeVideo[] | null;
+}) {
   const list = (rows ?? [])
     .filter((r) => r.is_visible)
     .sort((a, b) => a.sort_order - b.sort_order);
 
-  if (list.length === 0) return null;
+  const clips = (videos ?? [])
+    .filter((v) => v.is_visible)
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .slice(0, 5);
+
+  if (list.length === 0 && clips.length === 0) return null;
 
   return (
     <div className="space-y-2">
@@ -28,6 +39,33 @@ export function NoticeLetterSection({ rows }: { rows?: NoticeLetter[] | null }) 
           </p>
         </div>
       ))}
+
+      {clips.length > 0 ? (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {clips.map((v) => (
+            <div
+              key={v.id}
+              className="overflow-hidden rounded-2xl border border-sky-500/30 bg-card p-2 shadow-card"
+            >
+              {v.title ? (
+                <div className="mb-1 flex items-center gap-1.5 px-1 text-xs font-bold text-primary">
+                  <Video className="size-3.5" />
+                  <span className="truncate">{v.title}</span>
+                </div>
+              ) : null}
+              <video
+                controls
+                playsInline
+                preload="metadata"
+                src={v.url}
+                className="w-full rounded-xl bg-black"
+              >
+                <track kind="captions" />
+              </video>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
