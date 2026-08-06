@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Save, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadMedia } from "@/lib/admin-auth";
+import { VideoEmbed } from "@/components/app/VideoEmbed";
+
 import type {
   Audio,
   LiveBoardSettings,
