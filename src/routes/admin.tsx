@@ -9,6 +9,7 @@ import {
   fetchLiveBoardSettings,
   fetchLiveNotices,
   fetchNoticeLetters,
+  fetchNoticeVideos,
   fetchMarquees,
   fetchPosts,
   fetchReports,
@@ -23,6 +24,7 @@ import {
   type LiveBoardSettings,
   type LiveNotice,
   type NoticeLetter,
+  type NoticeVideo,
   type Marquee,
   type Post,
   type Report,
@@ -39,6 +41,7 @@ import {
   MarqueesPanel,
   PostsPanel,
   NoticeLettersPanel,
+  NoticeVideosPanel,
   SectionsPanel,
   SplashPanel,
   StationsPanel,
@@ -79,6 +82,7 @@ type AdminData = {
   liveSettings: LiveBoardSettings | null;
   demu: DemuSchedule[];
   noticeLetters: NoticeLetter[];
+  noticeVideos: NoticeVideo[];
   viewers: number;
 };
 
@@ -96,6 +100,7 @@ const EMPTY: AdminData = {
   liveSettings: null,
   demu: [],
   noticeLetters: [],
+  noticeVideos: [],
   viewers: 0,
 };
 
@@ -134,6 +139,7 @@ function AdminPage() {
       liveSettings,
       demu,
       noticeLetters,
+      noticeVideos,
       viewers,
     ] = await Promise.all([
       fetchStations(),
@@ -149,6 +155,7 @@ function AdminPage() {
       fetchLiveBoardSettings(),
       fetchDemuSchedules(),
       fetchNoticeLetters(),
+      fetchNoticeVideos(),
       fetchViewerCount(),
     ]);
     setData({
@@ -165,6 +172,7 @@ function AdminPage() {
       liveSettings,
       demu,
       noticeLetters,
+      noticeVideos,
       viewers,
     });
   }, []);
@@ -242,6 +250,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="reports" className="mt-4">
             <NoticeLettersPanel rows={data.noticeLetters} refresh={load} />
+            <div className="mt-4">
+              <NoticeVideosPanel rows={data.noticeVideos} refresh={load} />
+            </div>
           </TabsContent>
 
           <TabsContent value="suggestions" className="mt-4">

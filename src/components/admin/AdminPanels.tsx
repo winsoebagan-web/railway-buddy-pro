@@ -10,6 +10,7 @@ import type {
   Post,
   Report,
   NoticeLetter,
+  NoticeVideo,
   Section,
   SplashSlide,
   Station,
@@ -39,6 +40,7 @@ type TableName =
   | "sections"
   | "live_notices"
   | "notice_letters"
+  | "notice_videos"
   | "demu_schedules";
 
 export async function saveRow(table: TableName, id: string, patch: Row, onDone: () => void) {
@@ -901,6 +903,108 @@ export function NoticeLettersPanel({
                 <Trash2 className="size-4" />
               </Button>
             </div>
+          </Card>
+        ))}
+    </div>
+  );
+}
+
+export function NoticeVideosPanel({ rows, refresh }: { rows: NoticeVideo[]; refresh: () => void }) {
+  const [title, setTitle] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function upload(file: File) {
+    if (rows.length >= 5) return toast.error("အများဆုံး ၅ ခုသာ တင်နိုင်ပါသည်။");
+    setBusy(true);
+    try {
+      const url = await uploadMedia(file, "video");
+      await insertRow(
+        "notice_videos",
+        { title: title || file.name, url, sort_order: rows.length + 1 },
+        refresh,
+      );
+      setTitle("");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Card>
+        <Label>ဗီဒီယို အသစ် ({rows.length}/5) — ၁၀ စက္ကန့်ခန့်</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="ခေါင်းစဉ်" />
+        <Input
+          type="file"
+          accept="video/*"
+          disabled={busy || rows.length >= 5}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) upload(f);
+          }}
+        />
+        <p className="text-[11px] text-muted-foreground">
+          သို့မဟုတ် ဗီဒီယို URL တိုက်ရိုက် ထည့်နိုင်ပါသည်။
+        </p>
+        <Button
+          variant="outline"
+          disabled={rows.length >= 5}
+          onClick={() => {
+            const url = window.prompt("ဗီဒီယို URL");
+            if (!url) return;
+            insertRow(
+              "notice_videos",
+              { title: title || "ဗီဒီယို", url, sort_order: rows.length + 1 },
+              refresh,
+            );
+            setTitle("");
+          }}
+        >
+          <Plus className="size-4" /> URL ဖြင့် ထည့်မည်
+        </Button>
+      </Card>
+
+      {rows
+        .slice()
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((row) => (
+          <Card key={row.id}>
+            <div className="flex gap-2">
+              <Input
+                defaultValue={row.title ?? ""}
+                placeholder="ခေါင်းစဉ်"
+                onBlur={(e) => saveRow("notice_videos", row.id, { title: e.target.value }, refresh)}
+              />
+              <Input
+                type="number"
+                className="w-20"
+                defaultValue={row.sort_order}
+                onBlur={(e) =>
+                  saveRow("notice_videos", row.id, { sort_order: Number(e.target.value) }, refresh)
+                }
+              />
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => deleteRow("notice_videos", row.id, refresh)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+            <Input
+              defaultValue={row.url}
+              placeholder="URL"
+              onBlur={(e) => saveRow("notice_videos", row.id, { url: e.target.value }, refresh)}
+            />
+            <VisibilityToggle
+              value={row.is_visible}
+              onChange={(v) => saveRow("notice_videos", row.id, { is_visible: v }, refresh)}
+            />
+            <video controls playsInline preload="metadata" src={row.url} className="w-full rounded-lg">
+              <track kind="captions" />
+            </video>
           </Card>
         ))}
     </div>
