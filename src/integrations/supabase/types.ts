@@ -242,27 +242,33 @@ export type Database = {
       notice_videos: {
         Row: {
           created_at: string
+          end_time: string | null
           id: string
           is_visible: boolean
           sort_order: number
+          start_time: string | null
           title: string
           updated_at: string
           url: string
         }
         Insert: {
           created_at?: string
+          end_time?: string | null
           id?: string
           is_visible?: boolean
           sort_order?: number
+          start_time?: string | null
           title?: string
           updated_at?: string
           url: string
         }
         Update: {
           created_at?: string
+          end_time?: string | null
           id?: string
           is_visible?: boolean
           sort_order?: number
+          start_time?: string | null
           title?: string
           updated_at?: string
           url?: string

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Save, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadMedia } from "@/lib/admin-auth";
+import { VideoEmbed } from "@/components/app/VideoEmbed";
+
 import type {
   Audio,
   LiveBoardSettings,
@@ -995,16 +997,40 @@ export function NoticeVideosPanel({ rows, refresh }: { rows: NoticeVideo[]; refr
             </div>
             <Input
               defaultValue={row.url}
-              placeholder="URL"
-              onBlur={(e) => saveRow("notice_videos", row.id, { url: e.target.value }, refresh)}
+              placeholder="URL (YouTube / Facebook / TikTok / mp4)"
+              onBlur={(e) => saveRow("notice_videos", row.id, { url: e.target.value.trim() }, refresh)}
             />
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <Label className="text-[11px]">စတင်ချိန်</Label>
+                <Input
+                  type="time"
+                  defaultValue={(row as { start_time?: string | null }).start_time?.slice(0, 5) ?? ""}
+                  onBlur={(e) =>
+                    saveRow("notice_videos", row.id, { start_time: e.target.value || null }, refresh)
+                  }
+                />
+              </div>
+              <div className="flex-1">
+                <Label className="text-[11px]">ပြီးဆုံးချိန်</Label>
+                <Input
+                  type="time"
+                  defaultValue={(row as { end_time?: string | null }).end_time?.slice(0, 5) ?? ""}
+                  onBlur={(e) =>
+                    saveRow("notice_videos", row.id, { end_time: e.target.value || null }, refresh)
+                  }
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              အချိန်မထည့်ရင် တစ်နေကုန် ပြပါမည်။
+            </p>
             <VisibilityToggle
               value={row.is_visible}
               onChange={(v) => saveRow("notice_videos", row.id, { is_visible: v }, refresh)}
             />
-            <video controls playsInline preload="metadata" src={row.url} className="w-full rounded-lg">
-              <track kind="captions" />
-            </video>
+            <VideoEmbed url={row.url} title={row.title ?? undefined} />
+
           </Card>
         ))}
     </div>
