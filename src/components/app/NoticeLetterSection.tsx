@@ -83,15 +83,8 @@ export function NoticeLetterSection({
                   <span className="truncate">{v.title}</span>
                 </div>
               ) : null}
-              <video
-                controls
-                playsInline
-                preload="metadata"
-                src={v.url}
-                className="w-full rounded-xl bg-black"
-              >
-                <track kind="captions" />
-              </video>
+              <VideoEmbed url={v.url} title={v.title ?? undefined} />
+
             </div>
           ))}
         </div>
