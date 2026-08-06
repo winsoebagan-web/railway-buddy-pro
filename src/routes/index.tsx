@@ -50,6 +50,7 @@ const EMPTY: AppBundle = {
   liveSettings: null,
   demu: [],
   noticeLetters: [],
+  noticeVideos: [],
   fetchedAt: "",
 };
 
@@ -163,7 +164,7 @@ function Home() {
               </>
             ) : null}
             {section.key === "reports" ? (
-              <NoticeLetterSection rows={bundle.noticeLetters} />
+              <NoticeLetterSection rows={bundle.noticeLetters} videos={bundle.noticeVideos} />
             ) : null}
 
             {section.key === "suggestions" ? (
