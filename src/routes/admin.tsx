@@ -16,7 +16,7 @@ import {
   fetchSections,
   fetchSplashSlides,
   fetchStations,
-  fetchSuggestions,
+  fetchNotifications,
   fetchTrains,
   fetchViewerCount,
   type Audio,
@@ -31,7 +31,7 @@ import {
   type Section,
   type SplashSlide,
   type Station,
-  type Suggestion,
+  type AppNotification,
   type TrainWithStops,
 } from "@/lib/data";
 import {
@@ -45,7 +45,7 @@ import {
   SectionsPanel,
   SplashPanel,
   StationsPanel,
-  SuggestionsPanel,
+  NotificationsPanel,
   TrainsPanel,
   ViewersPanel,
 } from "@/components/admin/AdminPanels";
@@ -73,7 +73,7 @@ type AdminData = {
   trains: TrainWithStops[];
   posts: Post[];
   reports: Report[];
-  suggestions: Suggestion[];
+  notifications: AppNotification[];
   audios: Audio[];
   marquees: Marquee[];
   splash: SplashSlide[];
@@ -91,7 +91,7 @@ const EMPTY: AdminData = {
   trains: [],
   posts: [],
   reports: [],
-  suggestions: [],
+  notifications: [],
   audios: [],
   marquees: [],
   splash: [],
@@ -110,7 +110,7 @@ const TABS = [
   { key: "stations", label: "ဘူတာများ" },
   { key: "posts", label: "ပို့စ်များ" },
   { key: "reports", label: "အသိပေးစာ" },
-  { key: "suggestions", label: "အကြံပြုလွှာ" },
+  { key: "notifications", label: "နိုတီ" },
   { key: "audios", label: "အသံဖိုင်" },
   { key: "live", label: "အသိပေးဘုတ်" },
   { key: "marquees", label: "စာတန်းပြေး" },
@@ -130,7 +130,7 @@ function AdminPage() {
       trains,
       posts,
       reports,
-      suggestions,
+      notifications,
       audios,
       marquees,
       splash,
@@ -146,7 +146,7 @@ function AdminPage() {
       fetchTrains(true),
       fetchPosts(),
       fetchReports(),
-      fetchSuggestions(),
+      fetchNotifications(),
       fetchAudios(),
       fetchMarquees(),
       fetchSplashSlides(),
@@ -163,7 +163,7 @@ function AdminPage() {
       trains,
       posts,
       reports,
-      suggestions,
+      notifications,
       audios,
       marquees,
       splash,
@@ -255,8 +255,8 @@ function AdminPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="suggestions" className="mt-4">
-            <SuggestionsPanel rows={data.suggestions} refresh={load} />
+          <TabsContent value="notifications" className="mt-4">
+            <NotificationsPanel rows={data.notifications} refresh={load} />
           </TabsContent>
           <TabsContent value="audios" className="mt-4">
             <AudiosPanel rows={data.audios} refresh={load} />

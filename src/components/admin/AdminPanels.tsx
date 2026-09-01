@@ -16,7 +16,7 @@ import type {
   Section,
   SplashSlide,
   Station,
-  Suggestion,
+  AppNotification,
   DemuSchedule,
   TrainStop,
   TrainWithStops,
@@ -35,7 +35,7 @@ type TableName =
   | "train_stops"
   | "posts"
   | "reports"
-  | "suggestions"
+  | "notifications"
   | "audios"
   | "marquees"
   | "splash_slides"
@@ -1078,28 +1078,137 @@ export function ReportsPanel({ rows, refresh }: { rows: Report[]; refresh: () =>
   );
 }
 
-export function SuggestionsPanel({ rows, refresh }: { rows: Suggestion[]; refresh: () => void }) {
+export function NotificationsPanel({
+  rows,
+  refresh,
+}: {
+  rows: AppNotification[];
+  refresh: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [sendAt, setSendAt] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function pickImage(file: File) {
+    setBusy(true);
+    try {
+      setImageUrl(await uploadMedia(file, "notifications"));
+      toast.success("ဓာတ်ပုံ တင်ပြီးပါပြီ။");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function add() {
+    if (!message.trim()) return toast.error("စာသား ရေးပါ။");
+    await insertRow(
+      "notifications",
+      {
+        title: title.trim(),
+        message: message.trim().slice(0, 300),
+        image_url: imageUrl || null,
+        send_at: sendAt ? new Date(sendAt).toISOString() : new Date().toISOString(),
+        is_visible: true,
+      },
+      refresh,
+    );
+    setTitle("");
+    setMessage("");
+    setSendAt("");
+    setImageUrl("");
+  }
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      <Card>
+        <Label>နိုတီ အသစ်ပို့ရန်</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="ခေါင်းစဉ်" />
+        <Textarea
+          rows={3}
+          maxLength={300}
+          value={message}
+          onChange={(e) => setMessage(e.target.value.slice(0, 300))}
+          placeholder="စာသား (၃၀၀ လုံးအထိ)"
+        />
+        <p className="text-right text-[11px] text-muted-foreground">{message.length} / 300</p>
+        <Label>ပို့မည့်အချိန် (ကြိုတင် ချိန်လို့ရသည်၊ မထည့်ရင် ချက်ချင်း)</Label>
+        <Input type="datetime-local" value={sendAt} onChange={(e) => setSendAt(e.target.value)} />
+        <div className="flex items-center gap-2">
+          <Input
+            type="file"
+            accept="image/*"
+            disabled={busy}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void pickImage(f);
+            }}
+          />
+          <Upload className="size-4 text-muted-foreground" />
+        </div>
+        {imageUrl ? (
+          <img src={imageUrl} alt="preview" className="max-h-40 rounded-lg object-cover" />
+        ) : null}
+        <Button onClick={add} disabled={busy}>
+          <Plus className="size-4" /> ပို့မည်
+        </Button>
+      </Card>
+
       {rows.map((row) => (
         <Card key={row.id}>
           <Input
-            defaultValue={row.author ?? ""}
-            onBlur={(e) => saveRow("suggestions", row.id, { author: e.target.value || null }, refresh)}
+            defaultValue={row.title}
+            placeholder="ခေါင်းစဉ်"
+            onBlur={(e) => saveRow("notifications", row.id, { title: e.target.value }, refresh)}
           />
           <Textarea
             rows={3}
             maxLength={300}
             defaultValue={row.message}
             onBlur={(e) =>
-              saveRow("suggestions", row.id, { message: e.target.value.slice(0, 300) }, refresh)
+              saveRow("notifications", row.id, { message: e.target.value.slice(0, 300) }, refresh)
             }
           />
+          <Input
+            type="datetime-local"
+            defaultValue={new Date(row.send_at).toISOString().slice(0, 16)}
+            onBlur={(e) =>
+              saveRow(
+                "notifications",
+                row.id,
+                { send_at: new Date(e.target.value).toISOString() },
+                refresh,
+              )
+            }
+          />
+          <Input
+            defaultValue={row.image_url ?? ""}
+            placeholder="ဓာတ်ပုံ URL"
+            onBlur={(e) =>
+              saveRow("notifications", row.id, { image_url: e.target.value || null }, refresh)
+            }
+          />
+          {row.image_url ? (
+            <img src={row.image_url} alt={row.title} className="max-h-40 rounded-lg object-cover" />
+          ) : null}
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground">
-              {new Date(row.created_at).toLocaleString()}
+            <span className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              {row.is_visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+              <Switch
+                checked={row.is_visible}
+                onCheckedChange={(v) =>
+                  saveRow("notifications", row.id, { is_visible: v }, refresh)
+                }
+              />
             </span>
-            <Button variant="destructive" size="icon" onClick={() => deleteRow("suggestions", row.id, refresh)}>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => deleteRow("notifications", row.id, refresh)}
+            >
               <Trash2 className="size-4" />
             </Button>
           </div>

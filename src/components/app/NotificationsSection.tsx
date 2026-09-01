@@ -1,0 +1,128 @@
+import { useEffect, useMemo, useState } from "react";
+import { Bell, BellOff, X } from "lucide-react";
+import type { AppNotification } from "@/lib/data";
+import { mmRelative } from "@/lib/mm";
+import { Button } from "@/components/ui/button";
+
+const OFF_KEY = "notif-off";
+const SEEN_KEY = "notif-dismissed";
+
+function readList(key: string): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(window.localStorage.getItem(key) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+export function NotificationsSection({ rows }: { rows?: AppNotification[] | null }) {
+  const [off, setOff] = useState(false);
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const [open, setOpen] = useState<AppNotification | null>(null);
+
+  useEffect(() => {
+    setOff(window.localStorage.getItem(OFF_KEY) === "1");
+    setDismissed(readList(SEEN_KEY));
+  }, []);
+
+  function toggleOff() {
+    const next = !off;
+    setOff(next);
+    window.localStorage.setItem(OFF_KEY, next ? "1" : "0");
+  }
+
+  function dismiss(id: string) {
+    const next = [...new Set([...dismissed, id])];
+    setDismissed(next);
+    window.localStorage.setItem(SEEN_KEY, JSON.stringify(next));
+    setOpen(null);
+  }
+
+  const list = useMemo(() => {
+    const now = Date.now();
+    return (rows ?? [])
+      .filter((n) => n.is_visible && new Date(n.send_at).getTime() <= now)
+      .filter((n) => !dismissed.includes(n.id))
+      .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
+  }, [rows, dismissed]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
+        <span className="flex items-center gap-1.5 text-sm font-bold text-primary">
+          {off ? <BellOff className="size-4" /> : <Bell className="size-4" />}
+          နိုတီများ
+        </span>
+        <Button variant={off ? "outline" : "default"} size="sm" onClick={toggleOff}>
+          {off ? "ပြန်ဖွင့်မည်" : "ပိတ်ထားမည်"}
+        </Button>
+      </div>
+
+      {off ? (
+        <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
+          နိုတီများကို ပိတ်ထားပါသည်။
+        </p>
+      ) : list.length === 0 ? (
+        <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
+          နိုတီ အသစ် မရှိသေးပါ။
+        </p>
+      ) : (
+        list.map((n) => (
+          <button
+            key={n.id}
+            type="button"
+            onClick={() => setOpen(n)}
+            className="w-full overflow-hidden rounded-2xl border border-primary/25 bg-sky-soft/60 p-3 text-left shadow-card"
+          >
+            <div className="flex items-center gap-1.5 text-sm font-bold text-primary">
+              <Bell className="size-4" /> {n.title || "နိုတီ"}
+            </div>
+            {n.image_url ? (
+              <img
+                src={n.image_url}
+                alt={n.title || "နိုတီ ဓာတ်ပုံ"}
+                loading="lazy"
+                className="mt-2 max-h-44 w-full rounded-xl object-cover"
+              />
+            ) : null}
+            <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs">{n.message}</p>
+            <div className="mt-1 text-[11px] text-muted-foreground">{mmRelative(n.send_at)}</div>
+          </button>
+        ))
+      )}
+
+      {open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center"
+          onClick={() => setOpen(null)}
+        >
+          <div
+            className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-card p-4 shadow-card"
+            style={{ WebkitOverflowScrolling: "touch" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <h3 className="text-base font-bold text-primary">{open.title || "နိုတီ"}</h3>
+              <Button variant="ghost" size="icon" onClick={() => setOpen(null)}>
+                <X className="size-4" />
+              </Button>
+            </div>
+            {open.image_url ? (
+              <img
+                src={open.image_url}
+                alt={open.title || "နိုတီ ဓာတ်ပုံ"}
+                className="mb-2 w-full rounded-xl object-contain"
+              />
+            ) : null}
+            <p className="whitespace-pre-wrap text-sm">{open.message}</p>
+            <div className="mt-2 text-[11px] text-muted-foreground">{mmRelative(open.send_at)}</div>
+            <Button className="mt-3 w-full" variant="outline" onClick={() => dismiss(open.id)}>
+              ဖတ်ပြီးပါပြီ
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

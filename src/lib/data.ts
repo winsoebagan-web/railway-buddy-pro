@@ -6,7 +6,7 @@ export type Train = Tables<"trains">;
 export type TrainStop = Tables<"train_stops">;
 export type Post = Tables<"posts">;
 export type Report = Tables<"reports">;
-export type Suggestion = Tables<"suggestions">;
+export type AppNotification = Tables<"notifications">;
 export type Audio = Tables<"audios">;
 export type Marquee = Tables<"marquees">;
 export type SplashSlide = Tables<"splash_slides">;
@@ -50,9 +50,9 @@ export async function fetchReports(): Promise<Report[]> {
   );
 }
 
-export async function fetchSuggestions(): Promise<Suggestion[]> {
+export async function fetchNotifications(): Promise<AppNotification[]> {
   return unwrap(
-    await supabase.from("suggestions").select("*").order("created_at", { ascending: false }).limit(80),
+    await supabase.from("notifications").select("*").order("send_at", { ascending: false }).limit(80),
   );
 }
 
@@ -111,7 +111,7 @@ export type AppBundle = {
   trains: TrainWithStops[];
   posts: Post[];
   reports: Report[];
-  suggestions: Suggestion[];
+  notifications: AppNotification[];
   audios: Audio[];
   marquees: Marquee[];
   splash: SplashSlide[];
@@ -130,7 +130,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     trains,
     posts,
     reports,
-    suggestions,
+    notifications,
     audios,
     marquees,
     splash,
@@ -145,7 +145,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     fetchTrains(),
     fetchPosts(),
     fetchReports(),
-    fetchSuggestions(),
+    fetchNotifications(),
     fetchAudios(),
     fetchMarquees(),
     fetchSplashSlides(),
@@ -161,7 +161,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
     trains,
     posts,
     reports,
-    suggestions,
+    notifications,
     audios,
     marquees,
     splash,
