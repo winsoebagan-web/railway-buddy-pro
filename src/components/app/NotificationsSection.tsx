@@ -16,10 +16,9 @@ function readList(key: string): string[] {
   }
 }
 
-export function NotificationsSection({ rows }: { rows?: AppNotification[] | null }) {
+function useNotifications(rows?: AppNotification[] | null) {
   const [off, setOff] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>([]);
-  const [open, setOpen] = useState<AppNotification | null>(null);
 
   useEffect(() => {
     setOff(window.localStorage.getItem(OFF_KEY) === "1");
@@ -36,7 +35,6 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
     const next = [...new Set([...dismissed, id])];
     setDismissed(next);
     window.localStorage.setItem(SEEN_KEY, JSON.stringify(next));
-    setOpen(null);
   }
 
   const list = useMemo(() => {
@@ -46,6 +44,98 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
       .filter((n) => !dismissed.includes(n.id))
       .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
   }, [rows, dismissed]);
+
+  return { off, toggleOff, dismiss, list };
+}
+
+export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null }) {
+  const { off, toggleOff, dismiss, list } = useNotifications(rows);
+  const [open, setOpen] = useState<AppNotification | null>(null);
+
+  if (off) return null;
+
+  return (
+    <>
+      <div className="pointer-events-none fixed left-0 right-0 top-[4.25rem] z-40 space-y-2 px-3 sm:top-20">
+        {list.slice(0, 3).map((n) => (
+          <button
+            key={n.id}
+            type="button"
+            onClick={() => setOpen(n)}
+            className="pointer-events-auto mx-auto flex w-full max-w-2xl items-start gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3 text-left shadow-card backdrop-blur animate-in slide-in-from-top-3 fade-in duration-300"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <Bell className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <span className="line-clamp-1 text-sm font-bold text-primary">
+                  {n.title || "နိုတီ"}
+                </span>
+                <span className="text-[11px] whitespace-nowrap text-muted-foreground">
+                  {mmRelative(n.send_at)}
+                </span>
+              </div>
+              <p className="line-clamp-2 text-xs text-foreground/90">{n.message}</p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                dismiss(n.id);
+              }}
+              className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
+              aria-label="ပိတ်မည်"
+            >
+              <X className="size-4" />
+            </button>
+          </button>
+        ))}
+      </div>
+
+      {open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center"
+          onClick={() => setOpen(null)}
+        >
+          <div
+            className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-card p-4 shadow-card"
+            style={{ WebkitOverflowScrolling: "touch" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Bell className="size-4" />
+                </span>
+                <h3 className="text-base font-bold text-primary">{open.title || "နိုတီ"}</h3>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setOpen(null)}>
+                <X className="size-4" />
+              </Button>
+            </div>
+            {open.image_url ? (
+              <img
+                src={open.image_url}
+                alt={open.title || "နိုတီ ဓာတ်ပုံ"}
+                className="mb-2 w-full rounded-xl object-contain"
+              />
+            ) : null}
+            <p className="whitespace-pre-wrap text-sm">{open.message}</p>
+            <div className="mt-2 text-[11px] text-muted-foreground">{mmRelative(open.send_at)}</div>
+            <Button className="mt-3 w-full" variant="outline" onClick={() => { dismiss(open.id); setOpen(null); }}>
+              ဖတ်ပြီးပါပြီ
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export function NotificationsSection({ rows }: { rows?: AppNotification[] | null }) {
+  const { off, toggleOff, dismiss, list } = useNotifications(rows);
+  const [open, setOpen] = useState<AppNotification | null>(null);
 
   return (
     <div className="space-y-3">
@@ -117,7 +207,7 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             ) : null}
             <p className="whitespace-pre-wrap text-sm">{open.message}</p>
             <div className="mt-2 text-[11px] text-muted-foreground">{mmRelative(open.send_at)}</div>
-            <Button className="mt-3 w-full" variant="outline" onClick={() => dismiss(open.id)}>
+            <Button className="mt-3 w-full" variant="outline" onClick={() => { dismiss(open.id); setOpen(null); }}>
               ဖတ်ပြီးပါပြီ
             </Button>
           </div>
