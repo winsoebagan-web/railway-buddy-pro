@@ -11,7 +11,7 @@ import { ScheduleSection } from "@/components/app/ScheduleSection";
 import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
 import { NoticeLetterSection } from "@/components/app/NoticeLetterSection";
-import { SuggestionsSection } from "@/components/app/SuggestionsSection";
+import { NotificationsSection } from "@/components/app/NotificationsSection";
 import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ const EMPTY: AppBundle = {
   trains: [],
   posts: [],
   reports: [],
-  suggestions: [],
+  notifications: [],
   audios: [],
   marquees: [],
   splash: [],
@@ -167,8 +167,8 @@ function Home() {
               <NoticeLetterSection rows={bundle.noticeLetters} videos={bundle.noticeVideos} />
             ) : null}
 
-            {section.key === "suggestions" ? (
-              <SuggestionsSection suggestions={bundle.suggestions} onChanged={refresh} />
+            {section.key === "notifications" ? (
+              <NotificationsSection rows={bundle.notifications} />
             ) : null}
             {section.key === "audio" ? <AudioSection audios={bundle.audios} /> : null}
             {section.key === "demu" ? <DemuSection rows={bundle.demu} /> : null}
