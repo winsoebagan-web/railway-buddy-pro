@@ -275,6 +275,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_visible: boolean
+          message: string
+          send_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean
+          message?: string
+          send_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean
+          message?: string
+          send_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           body: string
@@ -428,27 +461,6 @@ export type Database = {
           id?: string
           name?: string
           sort_order?: number
-        }
-        Relationships: []
-      }
-      suggestions: {
-        Row: {
-          author: string | null
-          created_at: string
-          id: string
-          message: string
-        }
-        Insert: {
-          author?: string | null
-          created_at?: string
-          id?: string
-          message: string
-        }
-        Update: {
-          author?: string | null
-          created_at?: string
-          id?: string
-          message?: string
         }
         Relationships: []
       }
