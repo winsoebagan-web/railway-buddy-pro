@@ -104,6 +104,16 @@ function Home() {
     };
   }, [refresh]);
 
+  // နိုင်ငံတော် အသိပေးစာ real-time — Admin ပို့လိုက်တာနဲ့ ချက်ချင်း ရောက်စေမည်
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    return subscribeNotifications(() => {
+      void refresh();
+    });
+  }, [refresh]);
+
+
+
 
   const sections = bundle.sections.filter((s) => s.is_visible);
 
