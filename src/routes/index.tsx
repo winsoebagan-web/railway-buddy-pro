@@ -11,7 +11,7 @@ import { ScheduleSection } from "@/components/app/ScheduleSection";
 import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
 import { NoticeLetterSection } from "@/components/app/NoticeLetterSection";
-import { NotificationsSection } from "@/components/app/NotificationsSection";
+import { NotificationsBanner, NotificationsSection } from "@/components/app/NotificationsSection";
 import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
 import { Button } from "@/components/ui/button";
@@ -136,6 +136,8 @@ function Home() {
           </span>
         </div>
       </header>
+
+      {hydrated ? <NotificationsBanner rows={bundle.notifications} /> : null}
 
       <MarqueeBar items={bundle.marquees} position="top" />
 

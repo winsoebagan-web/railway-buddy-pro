@@ -48,15 +48,74 @@ function useNotifications(rows?: AppNotification[] | null) {
   return { off, toggleOff, dismiss, list };
 }
 
+function playBell() {
+  try {
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.6);
+    osc.onended = () => void ctx.close();
+  } catch {
+    /* ignore */
+  }
+}
+
 export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null }) {
   const { off, toggleOff, dismiss, list } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
+  const [ringing, setRinging] = useState(false);
+
+  // နိုတီအသစ်ရောက်ရင် messenger လို ခေါင်းလောင်းတုန်ပြီး အသံမြည်စေမည်
+  useEffect(() => {
+    if (off || list.length === 0) return;
+    const latest = list[0];
+    if (typeof window === "undefined") return;
+    const lastId = window.localStorage.getItem("notif-last-id");
+    if (lastId === latest.id) return;
+    window.localStorage.setItem("notif-last-id", latest.id);
+    setRinging(true);
+    playBell();
+    const t = window.setTimeout(() => setRinging(false), 4000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list.length > 0 ? list[0]?.id : null, off]);
 
   if (off) return null;
 
   return (
     <>
+      <style>{`
+        @keyframes bell-shake {
+          0%, 100% { transform: rotate(0deg); }
+          15% { transform: rotate(18deg); }
+          30% { transform: rotate(-15deg); }
+          45% { transform: rotate(12deg); }
+          60% { transform: rotate(-9deg); }
+          75% { transform: rotate(5deg); }
+        }
+        .bell-ring { animation: bell-shake 0.6s ease-in-out infinite; transform-origin: top center; }
+      `}</style>
       <div className="pointer-events-none fixed left-0 right-0 top-[4.25rem] z-40 space-y-2 px-3 sm:top-20">
+        {list.length > 0 ? (
+          <div className="mx-auto flex w-full max-w-2xl justify-end">
+            <button
+              type="button"
+              onClick={toggleOff}
+              className="pointer-events-auto flex items-center gap-1 rounded-full bg-card/95 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-card backdrop-blur hover:text-foreground"
+            >
+              <BellOff className="size-3.5" /> နိုတီ ပိတ်ရန်
+            </button>
+          </div>
+        ) : null}
         {list.slice(0, 3).map((n) => (
           <button
             key={n.id}
@@ -64,8 +123,11 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
             onClick={() => setOpen(n)}
             className="pointer-events-auto mx-auto flex w-full max-w-2xl items-start gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3 text-left shadow-card backdrop-blur animate-in slide-in-from-top-3 fade-in duration-300"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Bell className="size-5" />
+            <span className={`relative flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ${ringing ? "pulse" : ""}`}>
+              <Bell className={`size-5 ${ringing ? "bell-ring" : ""}`} />
+              {ringing ? (
+                <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-red-500 ring-2 ring-card" />
+              ) : null}
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
