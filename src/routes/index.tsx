@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, RefreshCw, Wifi, WifiOff } from "lucide-react";
-import { fetchAppBundle, bumpViewers, fetchViewerCount, type AppBundle } from "@/lib/data";
+import { fetchAppBundle, bumpViewers, fetchViewerCount, subscribeNotifications, type AppBundle } from "@/lib/data";
 import { useCached, useOnline, useHydrated, readCache, writeCache } from "@/lib/offline";
 import { useVersionCheck } from "@/lib/version";
 import { mmNum } from "@/lib/mm";
@@ -103,6 +103,16 @@ function Home() {
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [refresh]);
+
+  // နိုင်ငံတော် အသိပေးစာ real-time — Admin ပို့လိုက်တာနဲ့ ချက်ချင်း ရောက်စေမည်
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    return subscribeNotifications(() => {
+      void refresh();
+    });
+  }, [refresh]);
+
+
 
 
   const sections = bundle.sections.filter((s) => s.is_visible);
