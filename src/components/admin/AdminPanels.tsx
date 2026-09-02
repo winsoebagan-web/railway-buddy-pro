@@ -1125,7 +1125,7 @@ export function NotificationsPanel({
   return (
     <div className="space-y-3">
       <Card>
-        <Label>နိုင်ငံတော် အသိပေးစာ အသစ်ပို့ရန်</Label>
+        <Label>အသိပေးစာ အသစ်ပို့ရန်</Label>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="ခေါင်းစဉ်" />
         <Textarea
           rows={3}

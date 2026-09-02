@@ -176,7 +176,7 @@ export async function fetchAppBundle(): Promise<AppBundle> {
 }
 
 
-/** နိုင်ငံတော် အသိပေးစာများ ပြောင်းလဲတိုင်း real-time ဖြင့် အသိပေးမည်။ */
+/** အသိပေးစာများ ပြောင်းလဲတိုင်း real-time ဖြင့် အသိပေးမည်။ */
 export function subscribeNotifications(onChange: () => void): () => void {
   const channel = supabase
     .channel("notifications-live")
