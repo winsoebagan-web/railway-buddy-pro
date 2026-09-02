@@ -112,7 +112,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
               onClick={toggleOff}
               className="pointer-events-auto flex items-center gap-1 rounded-full bg-card/95 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-card backdrop-blur hover:text-foreground"
             >
-              <BellOff className="size-3.5" /> နိုတီ ပိတ်ရန်
+              <BellOff className="size-3.5" /> အသိပေးစာ ပိတ်ရန်
             </button>
           </div>
         ) : null}
@@ -132,7 +132,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
                 <span className="line-clamp-1 text-sm font-bold text-primary">
-                  {n.title || "နိုတီ"}
+                  {n.title || "နိုင်ငံတော် အသိပေးစာ"}
                 </span>
                 <span className="text-[11px] whitespace-nowrap text-muted-foreground">
                   {mmRelative(n.send_at)}
@@ -170,7 +170,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
                 <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
                   <Bell className="size-4" />
                 </span>
-                <h3 className="text-base font-bold text-primary">{open.title || "နိုတီ"}</h3>
+                <h3 className="text-base font-bold text-primary">{open.title || "နိုင်ငံတော် အသိပေးစာ"}</h3>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setOpen(null)}>
                 <X className="size-4" />
@@ -179,7 +179,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
             {open.image_url ? (
               <img
                 src={open.image_url}
-                alt={open.title || "နိုတီ ဓာတ်ပုံ"}
+                alt={open.title || "အသိပေးစာ ဓာတ်ပုံ"}
                 className="mb-2 w-full rounded-xl object-contain"
               />
             ) : null}
@@ -204,7 +204,7 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
       <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
         <span className="flex items-center gap-1.5 text-sm font-bold text-primary">
           {off ? <BellOff className="size-4" /> : <Bell className="size-4" />}
-          နိုတီများ
+          နိုင်ငံတော် အသိပေးစာများ
         </span>
         <Button variant={off ? "outline" : "default"} size="sm" onClick={toggleOff}>
           {off ? "ပြန်ဖွင့်မည်" : "ပိတ်ထားမည်"}
@@ -213,11 +213,11 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
 
       {off ? (
         <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
-          နိုတီများကို ပိတ်ထားပါသည်။
+          နိုင်ငံတော် အသိပေးစာများကို ပိတ်ထားပါသည်။
         </p>
       ) : list.length === 0 ? (
         <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
-          နိုတီ အသစ် မရှိသေးပါ။
+          နိုင်ငံတော် အသိပေးစာ အသစ် မရှိသေးပါ။
         </p>
       ) : (
         list.map((n) => (
@@ -228,12 +228,12 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             className="w-full overflow-hidden rounded-2xl border border-primary/25 bg-sky-soft/60 p-3 text-left shadow-card"
           >
             <div className="flex items-center gap-1.5 text-sm font-bold text-primary">
-              <Bell className="size-4" /> {n.title || "နိုတီ"}
+              <Bell className="size-4" /> {n.title || "နိုင်ငံတော် အသိပေးစာ"}
             </div>
             {n.image_url ? (
               <img
                 src={n.image_url}
-                alt={n.title || "နိုတီ ဓာတ်ပုံ"}
+                alt={n.title || "အသိပေးစာ ဓာတ်ပုံ"}
                 loading="lazy"
                 className="mt-2 max-h-44 w-full rounded-xl object-cover"
               />
@@ -255,7 +255,7 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-2 flex items-start justify-between gap-2">
-              <h3 className="text-base font-bold text-primary">{open.title || "နိုတီ"}</h3>
+              <h3 className="text-base font-bold text-primary">{open.title || "နိုင်ငံတော် အသိပေးစာ"}</h3>
               <Button variant="ghost" size="icon" onClick={() => setOpen(null)}>
                 <X className="size-4" />
               </Button>
@@ -263,7 +263,7 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             {open.image_url ? (
               <img
                 src={open.image_url}
-                alt={open.title || "နိုတီ ဓာတ်ပုံ"}
+                alt={open.title || "အသိပေးစာ ဓာတ်ပုံ"}
                 className="mb-2 w-full rounded-xl object-contain"
               />
             ) : null}
