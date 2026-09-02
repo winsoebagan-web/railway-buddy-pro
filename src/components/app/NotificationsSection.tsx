@@ -19,10 +19,17 @@ function readList(key: string): string[] {
 function useNotifications(rows?: AppNotification[] | null) {
   const [off, setOff] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>([]);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     setOff(window.localStorage.getItem(OFF_KEY) === "1");
     setDismissed(readList(SEEN_KEY));
+  }, []);
+
+  // ကြိုတင်ချိန်ထားသော အသိပေးစာများ အချိန်တန်တာနဲ့ ပေါ်လာစေရန်
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 10_000);
+    return () => window.clearInterval(t);
   }, []);
 
   function toggleOff() {
@@ -38,12 +45,12 @@ function useNotifications(rows?: AppNotification[] | null) {
   }
 
   const list = useMemo(() => {
-    const now = Date.now();
     return (rows ?? [])
       .filter((n) => n.is_visible && new Date(n.send_at).getTime() <= now)
       .filter((n) => !dismissed.includes(n.id))
       .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
-  }, [rows, dismissed]);
+  }, [rows, dismissed, now]);
+
 
   return { off, toggleOff, dismiss, list };
 }
