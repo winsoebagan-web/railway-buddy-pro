@@ -112,8 +112,11 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
             onClick={() => setOpen(n)}
             className="pointer-events-auto mx-auto flex w-full max-w-2xl items-start gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3 text-left shadow-card backdrop-blur animate-in slide-in-from-top-3 fade-in duration-300"
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Bell className="size-5" />
+            <span className={`relative flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ${ringing ? "pulse" : ""}`}>
+              <Bell className={`size-5 ${ringing ? "bell-ring" : ""}`} />
+              {ringing ? (
+                <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-red-500 ring-2 ring-card" />
+              ) : null}
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
