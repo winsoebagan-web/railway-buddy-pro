@@ -124,17 +124,6 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
               </div>
               <p className="line-clamp-2 text-xs text-foreground/90">{n.message}</p>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                dismiss(n.id);
-              }}
-              className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
-              aria-label="ပိတ်မည်"
-            >
-              <X className="size-4" />
-            </button>
           </button>
         ))}
       </div>
