@@ -67,13 +67,13 @@ function playBell() {
 }
 
 export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null }) {
-  const { off, toggleOff, dismiss, list } = useNotifications(rows);
+  const { dismiss, list } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
   const [ringing, setRinging] = useState(false);
 
   // နိုတီအသစ်ရောက်ရင် messenger လို ခေါင်းလောင်းတုန်ပြီး အသံမြည်စေမည်
   useEffect(() => {
-    if (off || list.length === 0) return;
+    if (list.length === 0) return;
     const latest = list[0];
     if (typeof window === "undefined") return;
     const lastId = window.localStorage.getItem("notif-last-id");
@@ -84,9 +84,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
     const t = window.setTimeout(() => setRinging(false), 4000);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list.length > 0 ? list[0]?.id : null, off]);
-
-  if (off) return null;
+  }, [list.length > 0 ? list[0]?.id : null]);
 
   return (
     <>
@@ -102,17 +100,6 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
         .bell-ring { animation: bell-shake 0.6s ease-in-out infinite; transform-origin: top center; }
       `}</style>
       <div className="pointer-events-none fixed left-0 right-0 top-[4.25rem] z-40 space-y-2 px-3 sm:top-20">
-        {list.length > 0 ? (
-          <div className="mx-auto flex w-full max-w-2xl justify-end">
-            <button
-              type="button"
-              onClick={toggleOff}
-              className="pointer-events-auto flex items-center gap-1 rounded-full bg-card/95 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-card backdrop-blur hover:text-foreground"
-            >
-              <BellOff className="size-3.5" /> အသိပေးစာ ပိတ်ရန်
-            </button>
-          </div>
-        ) : null}
         {list.slice(0, 3).map((n) => (
           <button
             key={n.id}
