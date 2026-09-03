@@ -4,24 +4,8 @@ import type { AppNotification } from "@/lib/data";
 import { mmRelative } from "@/lib/mm";
 import { Button } from "@/components/ui/button";
 
-const SEEN_KEY = "notif-dismissed";
-
-function readList(key: string): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(window.localStorage.getItem(key) ?? "[]") as string[];
-  } catch {
-    return [];
-  }
-}
-
 function useNotifications(rows?: AppNotification[] | null) {
-  const [dismissed, setDismissed] = useState<string[]>([]);
   const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    setDismissed(readList(SEEN_KEY));
-  }, []);
 
   // ကြိုတင်ချိန်ထားသော အသိပေးစာများ အချိန်တန်တာနဲ့ ပေါ်လာစေရန်
   useEffect(() => {
@@ -29,20 +13,13 @@ function useNotifications(rows?: AppNotification[] | null) {
     return () => window.clearInterval(t);
   }, []);
 
-  function dismiss(id: string) {
-    const next = [...new Set([...dismissed, id])];
-    setDismissed(next);
-    window.localStorage.setItem(SEEN_KEY, JSON.stringify(next));
-  }
-
   const list = useMemo(() => {
     return (rows ?? [])
       .filter((n) => n.is_visible && new Date(n.send_at).getTime() <= now)
-      .filter((n) => !dismissed.includes(n.id))
       .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
-  }, [rows, dismissed, now]);
+  }, [rows, now]);
 
-  return { dismiss, list };
+  return { list };
 }
 
 function playBell() {
