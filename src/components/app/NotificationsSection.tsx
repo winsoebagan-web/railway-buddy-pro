@@ -44,7 +44,7 @@ function playBell() {
 }
 
 export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null }) {
-  const { dismiss, list } = useNotifications(rows);
+  const { list } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
   const [ringing, setRinging] = useState(false);
 
