@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellOff, X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import type { AppNotification } from "@/lib/data";
 import { mmRelative } from "@/lib/mm";
 import { Button } from "@/components/ui/button";
 
-const OFF_KEY = "notif-off";
 const SEEN_KEY = "notif-dismissed";
 
 function readList(key: string): string[] {
@@ -17,12 +16,10 @@ function readList(key: string): string[] {
 }
 
 function useNotifications(rows?: AppNotification[] | null) {
-  const [off, setOff] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    setOff(window.localStorage.getItem(OFF_KEY) === "1");
     setDismissed(readList(SEEN_KEY));
   }, []);
 
@@ -31,12 +28,6 @@ function useNotifications(rows?: AppNotification[] | null) {
     const t = window.setInterval(() => setNow(Date.now()), 10_000);
     return () => window.clearInterval(t);
   }, []);
-
-  function toggleOff() {
-    const next = !off;
-    setOff(next);
-    window.localStorage.setItem(OFF_KEY, next ? "1" : "0");
-  }
 
   function dismiss(id: string) {
     const next = [...new Set([...dismissed, id])];
@@ -51,8 +42,7 @@ function useNotifications(rows?: AppNotification[] | null) {
       .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
   }, [rows, dismissed, now]);
 
-
-  return { off, toggleOff, dismiss, list };
+  return { dismiss, list };
 }
 
 function playBell() {
