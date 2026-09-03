@@ -143,7 +143,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
 }
 
 export function NotificationsSection({ rows }: { rows?: AppNotification[] | null }) {
-  const { dismiss, list } = useNotifications(rows);
+  const { list } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
 
   return (
