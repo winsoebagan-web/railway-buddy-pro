@@ -1,30 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellOff, X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import type { AppNotification } from "@/lib/data";
 import { mmRelative } from "@/lib/mm";
 import { Button } from "@/components/ui/button";
 
-const OFF_KEY = "notif-off";
-const SEEN_KEY = "notif-dismissed";
-
-function readList(key: string): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(window.localStorage.getItem(key) ?? "[]") as string[];
-  } catch {
-    return [];
-  }
-}
-
 function useNotifications(rows?: AppNotification[] | null) {
-  const [off, setOff] = useState(false);
-  const [dismissed, setDismissed] = useState<string[]>([]);
   const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    setOff(window.localStorage.getItem(OFF_KEY) === "1");
-    setDismissed(readList(SEEN_KEY));
-  }, []);
 
   // ကြိုတင်ချိန်ထားသော အသိပေးစာများ အချိန်တန်တာနဲ့ ပေါ်လာစေရန်
   useEffect(() => {
@@ -32,27 +13,13 @@ function useNotifications(rows?: AppNotification[] | null) {
     return () => window.clearInterval(t);
   }, []);
 
-  function toggleOff() {
-    const next = !off;
-    setOff(next);
-    window.localStorage.setItem(OFF_KEY, next ? "1" : "0");
-  }
-
-  function dismiss(id: string) {
-    const next = [...new Set([...dismissed, id])];
-    setDismissed(next);
-    window.localStorage.setItem(SEEN_KEY, JSON.stringify(next));
-  }
-
   const list = useMemo(() => {
     return (rows ?? [])
       .filter((n) => n.is_visible && new Date(n.send_at).getTime() <= now)
-      .filter((n) => !dismissed.includes(n.id))
       .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
-  }, [rows, dismissed, now]);
+  }, [rows, now]);
 
-
-  return { off, toggleOff, dismiss, list };
+  return { list };
 }
 
 function playBell() {
@@ -77,13 +44,13 @@ function playBell() {
 }
 
 export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null }) {
-  const { off, toggleOff, dismiss, list } = useNotifications(rows);
+  const { list } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
   const [ringing, setRinging] = useState(false);
 
   // နိုတီအသစ်ရောက်ရင် messenger လို ခေါင်းလောင်းတုန်ပြီး အသံမြည်စေမည်
   useEffect(() => {
-    if (off || list.length === 0) return;
+    if (list.length === 0) return;
     const latest = list[0];
     if (typeof window === "undefined") return;
     const lastId = window.localStorage.getItem("notif-last-id");
@@ -94,9 +61,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
     const t = window.setTimeout(() => setRinging(false), 4000);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list.length > 0 ? list[0]?.id : null, off]);
-
-  if (off) return null;
+  }, [list.length > 0 ? list[0]?.id : null]);
 
   return (
     <>
@@ -112,17 +77,6 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
         .bell-ring { animation: bell-shake 0.6s ease-in-out infinite; transform-origin: top center; }
       `}</style>
       <div className="pointer-events-none fixed left-0 right-0 top-[4.25rem] z-40 space-y-2 px-3 sm:top-20">
-        {list.length > 0 ? (
-          <div className="mx-auto flex w-full max-w-2xl justify-end">
-            <button
-              type="button"
-              onClick={toggleOff}
-              className="pointer-events-auto flex items-center gap-1 rounded-full bg-card/95 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-card backdrop-blur hover:text-foreground"
-            >
-              <BellOff className="size-3.5" /> အသိပေးစာ ပိတ်ရန်
-            </button>
-          </div>
-        ) : null}
         {list.slice(0, 3).map((n) => (
           <button
             key={n.id}
@@ -147,17 +101,6 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
               </div>
               <p className="line-clamp-2 text-xs text-foreground/90">{n.message}</p>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                dismiss(n.id);
-              }}
-              className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
-              aria-label="ပိတ်မည်"
-            >
-              <X className="size-4" />
-            </button>
           </button>
         ))}
       </div>
@@ -192,9 +135,6 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
             ) : null}
             <p className="whitespace-pre-wrap text-sm">{open.message}</p>
             <div className="mt-2 text-[11px] text-muted-foreground">{mmRelative(open.send_at)}</div>
-            <Button className="mt-3 w-full" variant="outline" onClick={() => { dismiss(open.id); setOpen(null); }}>
-              ဖတ်ပြီးပါပြီ
-            </Button>
           </div>
         </div>
       ) : null}
@@ -203,26 +143,17 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
 }
 
 export function NotificationsSection({ rows }: { rows?: AppNotification[] | null }) {
-  const { off, toggleOff, dismiss, list } = useNotifications(rows);
+  const { list } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
-        <span className="flex items-center gap-1.5 text-sm font-bold text-primary">
-          {off ? <BellOff className="size-4" /> : <Bell className="size-4" />}
-          အသိပေးစာများ
-        </span>
-        <Button variant={off ? "outline" : "default"} size="sm" onClick={toggleOff}>
-          {off ? "ပြန်ဖွင့်မည်" : "ပိတ်ထားမည်"}
-        </Button>
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-3">
+        <Bell className="size-4 text-primary" />
+        <span className="text-sm font-bold text-primary">အသိပေးစာများ</span>
       </div>
 
-      {off ? (
-        <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
-          အသိပေးစာများကို ပိတ်ထားပါသည်။
-        </p>
-      ) : list.length === 0 ? (
+      {list.length === 0 ? (
         <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
           အသိပေးစာ အသစ် မရှိသေးပါ။
         </p>
@@ -276,9 +207,6 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             ) : null}
             <p className="whitespace-pre-wrap text-sm">{open.message}</p>
             <div className="mt-2 text-[11px] text-muted-foreground">{mmRelative(open.send_at)}</div>
-            <Button className="mt-3 w-full" variant="outline" onClick={() => { dismiss(open.id); setOpen(null); }}>
-              ဖတ်ပြီးပါပြီ
-            </Button>
           </div>
         </div>
       ) : null}
