@@ -158,9 +158,6 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
             ) : null}
             <p className="whitespace-pre-wrap text-sm">{open.message}</p>
             <div className="mt-2 text-[11px] text-muted-foreground">{mmRelative(open.send_at)}</div>
-            <Button className="mt-3 w-full" variant="outline" onClick={() => { dismiss(open.id); setOpen(null); }}>
-              ဖတ်ပြီးပါပြီ
-            </Button>
           </div>
         </div>
       ) : null}
