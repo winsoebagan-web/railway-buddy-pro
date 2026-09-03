@@ -452,6 +452,21 @@ function StopsEditor({
             defaultValue={stop.station_name}
             onBlur={(e) => saveRow("train_stops", stop.id, { station_name: e.target.value }, refresh)}
           />
+          <label className="col-span-2 flex items-center gap-2 text-[11px] font-medium">
+            <Switch
+              checked={stop.stops}
+              onCheckedChange={(v) => saveRow("train_stops", stop.id, { stops: v }, refresh)}
+            />
+            {stop.stops ? "ရပ်သည်" : "မရပ်ပါ"}
+          </label>
+          <Input
+            className="h-8"
+            type="number"
+            title="အစဉ်"
+            defaultValue={stop.stop_order}
+            onBlur={(e) => saveRow("train_stops", stop.id, { stop_order: Number(e.target.value) }, refresh)}
+          />
+          <div />
           <Input
             className="h-8"
             type="time"
