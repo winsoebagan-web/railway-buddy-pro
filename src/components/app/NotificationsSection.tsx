@@ -180,26 +180,17 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
 }
 
 export function NotificationsSection({ rows }: { rows?: AppNotification[] | null }) {
-  const { off, toggleOff, dismiss, list } = useNotifications(rows);
+  const { dismiss, list } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-3">
-        <span className="flex items-center gap-1.5 text-sm font-bold text-primary">
-          {off ? <BellOff className="size-4" /> : <Bell className="size-4" />}
-          အသိပေးစာများ
-        </span>
-        <Button variant={off ? "outline" : "default"} size="sm" onClick={toggleOff}>
-          {off ? "ပြန်ဖွင့်မည်" : "ပိတ်ထားမည်"}
-        </Button>
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-3">
+        <Bell className="size-4 text-primary" />
+        <span className="text-sm font-bold text-primary">အသိပေးစာများ</span>
       </div>
 
-      {off ? (
-        <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
-          အသိပေးစာများကို ပိတ်ထားပါသည်။
-        </p>
-      ) : list.length === 0 ? (
+      {list.length === 0 ? (
         <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">
           အသိပေးစာ အသစ် မရှိသေးပါ။
         </p>
