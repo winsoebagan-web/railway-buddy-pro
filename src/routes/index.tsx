@@ -11,7 +11,7 @@ import { ScheduleSection } from "@/components/app/ScheduleSection";
 import { LiveBoard } from "@/components/app/LiveBoard";
 import { PostsSection } from "@/components/app/PostsSection";
 import { NoticeLetterSection } from "@/components/app/NoticeLetterSection";
-import { NotificationsBanner, NotificationsSection } from "@/components/app/NotificationsSection";
+import { NotificationsBanner, NotificationsBell, NotificationsSection } from "@/components/app/NotificationsSection";
 import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
 import { Button } from "@/components/ui/button";
@@ -132,6 +132,7 @@ function Home() {
               အချိန်ဇယား · ဘူတာ · လက်မှတ်ခ
             </p>
           </div>
+          {hydrated ? <NotificationsBell rows={bundle.notifications} /> : null}
           <span className="flex items-center gap-1 rounded-full bg-card/85 px-2 py-1 text-[11px] font-semibold text-primary">
             <Eye className="size-3.5" />
             {viewers === null ? "…" : mmNum(viewers.toLocaleString("en-US"))} ဦး
