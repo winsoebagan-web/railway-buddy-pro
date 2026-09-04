@@ -4,8 +4,40 @@ import type { AppNotification } from "@/lib/data";
 import { mmRelative } from "@/lib/mm";
 import { Button } from "@/components/ui/button";
 
+const READ_KEY = "notif-read-ids";
+
+function readIds(): string[] {
+  try {
+    return JSON.parse(window.localStorage.getItem(READ_KEY) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+function markRead(id: string) {
+  try {
+    const ids = readIds();
+    if (!ids.includes(id)) {
+      ids.push(id);
+      window.localStorage.setItem(READ_KEY, JSON.stringify(ids.slice(-200)));
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 function useNotifications(rows?: AppNotification[] | null) {
   const [now, setNow] = useState(() => Date.now());
+  const [read, setRead] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRead(readIds());
+  }, []);
+
+  const openRead = (n: AppNotification) => {
+    markRead(n.id);
+    setRead((prev) => (prev.includes(n.id) ? prev : [...prev, n.id]));
+  };
 
   // ကြိုတင်ချိန်ထားသော အသိပေးစာများ အချိန်တန်တာနဲ့ ပေါ်လာစေရန်
   useEffect(() => {
@@ -19,7 +51,7 @@ function useNotifications(rows?: AppNotification[] | null) {
       .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
   }, [rows, now]);
 
-  return { list };
+  return { list, read, openRead };
 }
 
 function playBell() {
