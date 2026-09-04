@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import type { SplashSlide } from "@/lib/data";
 
+function textStyleClass(style: string): string {
+  if (style === "blink") return "animate-blink";
+  if (style === "float") return "animate-float-updown";
+  return "";
+}
+
 export function Splash({ slides }: { slides: SplashSlide[] }) {
   const visible = slides.filter((s) => s.is_visible);
   const [show, setShow] = useState(visible.length > 0);
@@ -19,6 +25,8 @@ export function Splash({ slides }: { slides: SplashSlide[] }) {
 
   if (!show || visible.length === 0) return null;
   const slide = visible[Math.min(index, visible.length - 1)];
+  const color = slide.color || "#ffffff";
+  const anim = textStyleClass(slide.style ?? "plain");
 
   return (
     <div
@@ -34,11 +42,19 @@ export function Splash({ slides }: { slides: SplashSlide[] }) {
       ) : (
         <div className="animate-splash text-6xl">🚆</div>
       )}
-      <h1 className="animate-splash text-2xl font-bold text-primary-foreground drop-shadow">
+      <h1
+        className={`animate-splash text-2xl font-bold drop-shadow ${anim}`}
+        style={{ color }}
+      >
         {slide.text}
       </h1>
       {slide.subtext ? (
-        <p className="animate-splash max-w-sm text-sm text-primary-foreground/90">{slide.subtext}</p>
+        <p
+          className={`animate-splash max-w-sm text-sm ${anim}`}
+          style={{ color, opacity: 0.9 }}
+        >
+          {slide.subtext}
+        </p>
       ) : null}
       <div className="mt-4 flex gap-1.5">
         {visible.map((s, i) => (
