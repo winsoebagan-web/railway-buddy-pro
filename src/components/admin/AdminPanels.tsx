@@ -1383,8 +1383,20 @@ export function MarqueesPanel({ rows, refresh }: { rows: Marquee[]; refresh: () 
   );
 }
 
+const SPLASH_STYLES = [
+  { value: "plain", label: "ရိုးရိုး" },
+  { value: "blink", label: "မိတ်တုတ်မိတ်တုတ်" },
+  { value: "float", label: "အပေါ်အောက် လှုပ်ရှား" },
+];
+
 export function SplashPanel({ rows, refresh }: { rows: SplashSlide[]; refresh: () => void }) {
-  const [draft, setDraft] = useState({ text: "", subtext: "", image_url: "" });
+  const [draft, setDraft] = useState({
+    text: "",
+    subtext: "",
+    image_url: "",
+    color: "#ffffff",
+    style: "plain",
+  });
   const [busy, setBusy] = useState(false);
   return (
     <div className="space-y-2">
@@ -1400,6 +1412,26 @@ export function SplashPanel({ rows, refresh }: { rows: SplashSlide[]; refresh: (
           onChange={(e) => setDraft({ ...draft, subtext: e.target.value })}
           placeholder="အောက်စာသား"
         />
+        <div className="flex items-center gap-2">
+          <Label className="text-xs">အရောင်</Label>
+          <Input
+            type="color"
+            value={draft.color}
+            onChange={(e) => setDraft({ ...draft, color: e.target.value })}
+            className="h-9 w-14 p-1"
+          />
+          <select
+            value={draft.style}
+            onChange={(e) => setDraft({ ...draft, style: e.target.value })}
+            className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+          >
+            {SPLASH_STYLES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <Input
           type="file"
           accept="image/*"
@@ -1430,11 +1462,13 @@ export function SplashPanel({ rows, refresh }: { rows: SplashSlide[]; refresh: (
                 text: draft.text,
                 subtext: draft.subtext || null,
                 image_url: draft.image_url || null,
+                color: draft.color,
+                style: draft.style,
                 sort_order: rows.length + 1,
               },
               refresh,
             );
-            setDraft({ text: "", subtext: "", image_url: "" });
+            setDraft({ text: "", subtext: "", image_url: "", color: "#ffffff", style: "plain" });
           }}
         >
           <Plus className="size-4" /> ထည့်မည်
@@ -1452,6 +1486,25 @@ export function SplashPanel({ rows, refresh }: { rows: SplashSlide[]; refresh: (
               saveRow("splash_slides", row.id, { subtext: e.target.value || null }, refresh)
             }
           />
+          <div className="flex items-center gap-2">
+            <Input
+              type="color"
+              defaultValue={row.color ?? "#ffffff"}
+              onBlur={(e) => saveRow("splash_slides", row.id, { color: e.target.value }, refresh)}
+              className="h-9 w-14 p-1"
+            />
+            <select
+              defaultValue={row.style ?? "plain"}
+              onChange={(e) => saveRow("splash_slides", row.id, { style: e.target.value }, refresh)}
+              className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+            >
+              {SPLASH_STYLES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-3">
             <VisibilityToggle
               value={row.is_visible}
