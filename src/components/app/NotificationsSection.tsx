@@ -76,14 +76,17 @@ function playBell() {
 }
 
 export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null }) {
-  const { list } = useNotifications(rows);
+  const { list, read, openRead } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
   const [ringing, setRinging] = useState(false);
 
+  // ကြည့်ပြီးသား (read) နိုတီများကို banner မှာမပြတော့ပါ
+  const unread = useMemo(() => list.filter((n) => !read.includes(n.id)), [list, read]);
+
   // နိုတီအသစ်ရောက်ရင် messenger လို ခေါင်းလောင်းတုန်ပြီး အသံမြည်စေမည်
   useEffect(() => {
-    if (list.length === 0) return;
-    const latest = list[0];
+    if (unread.length === 0) return;
+    const latest = unread[0];
     if (typeof window === "undefined") return;
     const lastId = window.localStorage.getItem("notif-last-id");
     if (lastId === latest.id) return;
@@ -93,7 +96,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
     const t = window.setTimeout(() => setRinging(false), 4000);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list.length > 0 ? list[0]?.id : null]);
+  }, [unread.length > 0 ? unread[0]?.id : null]);
 
   return (
     <>
