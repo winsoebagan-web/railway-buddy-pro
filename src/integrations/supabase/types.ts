@@ -415,29 +415,35 @@ export type Database = {
       }
       splash_slides: {
         Row: {
+          color: string
           created_at: string
           id: string
           image_url: string | null
           is_visible: boolean
           sort_order: number
+          style: string
           subtext: string | null
           text: string
         }
         Insert: {
+          color?: string
           created_at?: string
           id?: string
           image_url?: string | null
           is_visible?: boolean
           sort_order?: number
+          style?: string
           subtext?: string | null
           text?: string
         }
         Update: {
+          color?: string
           created_at?: string
           id?: string
           image_url?: string | null
           is_visible?: boolean
           sort_order?: number
+          style?: string
           subtext?: string | null
           text?: string
         }

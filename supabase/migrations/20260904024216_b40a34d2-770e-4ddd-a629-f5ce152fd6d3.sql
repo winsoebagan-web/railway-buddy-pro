@@ -1,0 +1,1 @@
+ALTER TABLE public.splash_slides ADD COLUMN color text NOT NULL DEFAULT '#ffffff', ADD COLUMN style text NOT NULL DEFAULT 'plain';
