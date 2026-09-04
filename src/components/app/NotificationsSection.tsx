@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, X } from "lucide-react";
 import type { AppNotification } from "@/lib/data";
-import { mmRelative } from "@/lib/mm";
+import { mmNum, mmRelative } from "@/lib/mm";
 import { Button } from "@/components/ui/button";
 
 const READ_KEY = "notif-read-ids";
@@ -20,6 +20,7 @@ function markRead(id: string) {
     if (!ids.includes(id)) {
       ids.push(id);
       window.localStorage.setItem(READ_KEY, JSON.stringify(ids.slice(-200)));
+      window.dispatchEvent(new Event("notif-read-change"));
     }
   } catch {
     /* ignore */
@@ -32,6 +33,13 @@ function useNotifications(rows?: AppNotification[] | null) {
 
   useEffect(() => {
     setRead(readIds());
+    const sync = () => setRead(readIds());
+    window.addEventListener("notif-read-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("notif-read-change", sync);
+      window.removeEventListener("storage", sync);
+    };
   }, []);
 
   const openRead = (n: AppNotification) => {
@@ -178,7 +186,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
 }
 
 export function NotificationsSection({ rows }: { rows?: AppNotification[] | null }) {
-  const { list } = useNotifications(rows);
+  const { list, read, openRead } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
 
   return (
@@ -194,15 +202,27 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {list.map((n) => (
+        {list.map((n) => {
+          const isRead = read.includes(n.id);
+          return (
           <button
             key={n.id}
             type="button"
-            onClick={() => setOpen(n)}
+            onClick={() => { setOpen(n); openRead(n); }}
             className="w-full overflow-hidden rounded-2xl border border-primary/25 bg-sky-soft/60 p-3 text-left shadow-card"
           >
-            <div className="flex items-center gap-1.5 text-sm font-bold text-primary">
-              <Bell className="size-4" /> {n.title || "အသိပေးစာ"}
+            <div className="flex items-center justify-between gap-1.5 text-sm font-bold text-primary">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Bell className="size-4 shrink-0" />
+                <span className="line-clamp-1">{n.title || "အသိပေးစာ"}</span>
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  isRead ? "bg-muted text-muted-foreground" : "bg-red-500 text-white"
+                }`}
+              >
+                {isRead ? "ဖတ်ပြီး" : "မဖတ်ရသေး"}
+              </span>
             </div>
             {n.image_url ? (
               <img
@@ -215,7 +235,8 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs">{n.message}</p>
             <div className="mt-1 text-[11px] text-muted-foreground">{mmRelative(n.send_at)}</div>
           </button>
-        ))}
+          );
+        })}
         </div>
       )}
 
@@ -248,5 +269,21 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** App ထိပ်ခေါင်းလောင်းပုံ — မကြည့်ရသေးတဲ့ နိုတီအရေအတွက်ကို ပြသည်။ */
+export function NotificationsBell({ rows }: { rows?: AppNotification[] | null }) {
+  const { list, read } = useNotifications(rows);
+  const unread = list.filter((n) => !read.includes(n.id)).length;
+  return (
+    <span className="relative flex size-8 items-center justify-center rounded-full bg-card/85 text-primary">
+      <Bell className="size-4" />
+      {unread > 0 ? (
+        <span className="absolute -right-1 -top-1 flex min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-4 text-white ring-2 ring-card">
+          {mmNum(String(unread))}
+        </span>
+      ) : null}
+    </span>
   );
 }
