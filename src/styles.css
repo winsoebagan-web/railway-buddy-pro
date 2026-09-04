@@ -225,3 +225,17 @@
 @utility animate-splash {
   animation: splash-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+@keyframes float-updown {
+  0%,
+  100% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+}
+
+@utility animate-float-updown {
+  animation: float-updown 2.2s ease-in-out infinite;
+}
