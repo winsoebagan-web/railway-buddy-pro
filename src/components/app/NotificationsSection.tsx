@@ -112,11 +112,11 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
         .bell-ring { animation: bell-shake 0.6s ease-in-out infinite; transform-origin: top center; }
       `}</style>
       <div className="pointer-events-none fixed left-0 right-0 top-[4.25rem] z-40 space-y-2 px-3 sm:top-20">
-        {list.slice(0, 3).map((n) => (
+        {unread.slice(0, 3).map((n) => (
           <button
             key={n.id}
             type="button"
-            onClick={() => setOpen(n)}
+            onClick={() => { setOpen(n); openRead(n); }}
             className="pointer-events-auto mx-auto flex w-full max-w-2xl items-start gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3 text-left shadow-card backdrop-blur animate-in slide-in-from-top-3 fade-in duration-300"
           >
             <span className={`relative flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ${ringing ? "pulse" : ""}`}>
@@ -193,7 +193,8 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
           အသိပေးစာ အသစ် မရှိသေးပါ။
         </p>
       ) : (
-        list.map((n) => (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {list.map((n) => (
           <button
             key={n.id}
             type="button"
@@ -214,7 +215,8 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs">{n.message}</p>
             <div className="mt-1 text-[11px] text-muted-foreground">{mmRelative(n.send_at)}</div>
           </button>
-        ))
+        ))}
+        </div>
       )}
 
       {open ? (
