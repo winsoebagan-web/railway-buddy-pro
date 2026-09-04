@@ -4,8 +4,40 @@ import type { AppNotification } from "@/lib/data";
 import { mmRelative } from "@/lib/mm";
 import { Button } from "@/components/ui/button";
 
+const READ_KEY = "notif-read-ids";
+
+function readIds(): string[] {
+  try {
+    return JSON.parse(window.localStorage.getItem(READ_KEY) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+function markRead(id: string) {
+  try {
+    const ids = readIds();
+    if (!ids.includes(id)) {
+      ids.push(id);
+      window.localStorage.setItem(READ_KEY, JSON.stringify(ids.slice(-200)));
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 function useNotifications(rows?: AppNotification[] | null) {
   const [now, setNow] = useState(() => Date.now());
+  const [read, setRead] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRead(readIds());
+  }, []);
+
+  const openRead = (n: AppNotification) => {
+    markRead(n.id);
+    setRead((prev) => (prev.includes(n.id) ? prev : [...prev, n.id]));
+  };
 
   // ကြိုတင်ချိန်ထားသော အသိပေးစာများ အချိန်တန်တာနဲ့ ပေါ်လာစေရန်
   useEffect(() => {
@@ -19,7 +51,7 @@ function useNotifications(rows?: AppNotification[] | null) {
       .sort((a, b) => new Date(b.send_at).getTime() - new Date(a.send_at).getTime());
   }, [rows, now]);
 
-  return { list };
+  return { list, read, openRead };
 }
 
 function playBell() {
@@ -44,14 +76,17 @@ function playBell() {
 }
 
 export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null }) {
-  const { list } = useNotifications(rows);
+  const { list, read, openRead } = useNotifications(rows);
   const [open, setOpen] = useState<AppNotification | null>(null);
   const [ringing, setRinging] = useState(false);
 
+  // ကြည့်ပြီးသား (read) နိုတီများကို banner မှာမပြတော့ပါ
+  const unread = useMemo(() => list.filter((n) => !read.includes(n.id)), [list, read]);
+
   // နိုတီအသစ်ရောက်ရင် messenger လို ခေါင်းလောင်းတုန်ပြီး အသံမြည်စေမည်
   useEffect(() => {
-    if (list.length === 0) return;
-    const latest = list[0];
+    if (unread.length === 0) return;
+    const latest = unread[0];
     if (typeof window === "undefined") return;
     const lastId = window.localStorage.getItem("notif-last-id");
     if (lastId === latest.id) return;
@@ -61,7 +96,7 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
     const t = window.setTimeout(() => setRinging(false), 4000);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list.length > 0 ? list[0]?.id : null]);
+  }, [unread.length > 0 ? unread[0]?.id : null]);
 
   return (
     <>
@@ -77,11 +112,11 @@ export function NotificationsBanner({ rows }: { rows?: AppNotification[] | null 
         .bell-ring { animation: bell-shake 0.6s ease-in-out infinite; transform-origin: top center; }
       `}</style>
       <div className="pointer-events-none fixed left-0 right-0 top-[4.25rem] z-40 space-y-2 px-3 sm:top-20">
-        {list.slice(0, 3).map((n) => (
+        {unread.slice(0, 3).map((n) => (
           <button
             key={n.id}
             type="button"
-            onClick={() => setOpen(n)}
+            onClick={() => { setOpen(n); openRead(n); }}
             className="pointer-events-auto mx-auto flex w-full max-w-2xl items-start gap-3 rounded-2xl border border-primary/30 bg-card/95 p-3 text-left shadow-card backdrop-blur animate-in slide-in-from-top-3 fade-in duration-300"
           >
             <span className={`relative flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ${ringing ? "pulse" : ""}`}>
@@ -158,7 +193,8 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
           အသိပေးစာ အသစ် မရှိသေးပါ။
         </p>
       ) : (
-        list.map((n) => (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {list.map((n) => (
           <button
             key={n.id}
             type="button"
@@ -179,7 +215,8 @@ export function NotificationsSection({ rows }: { rows?: AppNotification[] | null
             <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs">{n.message}</p>
             <div className="mt-1 text-[11px] text-muted-foreground">{mmRelative(n.send_at)}</div>
           </button>
-        ))
+        ))}
+        </div>
       )}
 
       {open ? (
