@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_info: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_visible: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
