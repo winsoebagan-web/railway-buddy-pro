@@ -14,6 +14,7 @@ import { NoticeLetterSection } from "@/components/app/NoticeLetterSection";
 import { NotificationsBanner, NotificationsBell, NotificationsSection } from "@/components/app/NotificationsSection";
 import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
+import { AskAI } from "@/components/app/AskAI";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -196,6 +197,7 @@ function Home() {
       </main>
 
       <MarqueeBar items={bundle.marquees} position="bottom" />
+      {hydrated ? <AskAI /> : null}
     </div>
   );
 }
