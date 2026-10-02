@@ -20,10 +20,11 @@ async function buildContext() {
   const url = process.env.SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const sb = createClient(url, key, { auth: { persistSession: false } });
-  const [trains, stops, demu] = await Promise.all([
+  const [trains, stops, demu, info] = await Promise.all([
     sb.from("trains").select("*").eq("is_visible", true).order("sort_order"),
     sb.from("train_stops").select("*").order("stop_order"),
     sb.from("demu_schedules").select("*").order("sort_order"),
+    (sb as any).from("ai_info").select("category,content,updated_at").eq("is_visible", true).order("sort_order"),
   ]);
   const lines: string[] = [];
   for (const t of (trains.data ?? []) as any[]) {
@@ -47,6 +48,17 @@ async function buildContext() {
       const { id, created_at, updated_at, sort_order, ...rest } = r;
       lines.push(`- ${JSON.stringify(rest)}`);
     }
+  }
+  const names: Record<string, string> = {
+    electricity: "လျှပ်စစ်မီးသတင်း",
+    road: "ကားလမ်းသတင်း",
+    phone: "ဖုန်းအင်တာနက်သတင်း",
+  };
+  for (const [k, label] of Object.entries(names)) {
+    const items = ((info.data ?? []) as any[]).filter((x) => x.category === k);
+    if (!items.length) continue;
+    lines.push(`## ${label}`);
+    for (const x of items) lines.push(`- (${String(x.updated_at ?? "").slice(0, 10)}) ${x.content}`);
   }
   return lines.join("\n");
 }

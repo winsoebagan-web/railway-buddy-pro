@@ -53,6 +53,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AiInfoPanel } from "@/components/admin/AiInfoPanel";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -117,6 +118,7 @@ const TABS = [
   { key: "splash", label: "ဖွင့်ချိန်ပြ" },
   { key: "demu", label: "DEMU" },
   { key: "viewers", label: "ကြည့်သူ" },
+  { key: "ai", label: "AI သတင်း" },
 ];
 
 function AdminPage() {
@@ -275,6 +277,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="viewers" className="mt-4">
             <ViewersPanel count={data.viewers} refresh={load} />
+          </TabsContent>
+          <TabsContent value="ai" className="mt-4">
+            <AiInfoPanel />
           </TabsContent>
         </Tabs>
       </main>
