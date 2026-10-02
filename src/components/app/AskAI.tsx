@@ -97,7 +97,7 @@ export function AskAI() {
           <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm">
             {msgs.length === 0 ? (
               <div className="space-y-2">
-                <p className="text-muted-foreground">ရထားအချိန်၊ လက်မှတ်ခ အကြောင်း မေးနိုင်ပါသည်။</p>
+                <p className="text-muted-foreground">ရထားအချိန်၊ လက်မှတ်ခ၊ မီး၊ ကားလမ်း၊ ဖုန်းအင်တာနက် သတင်းများ မေးနိုင်ပါသည်။</p>
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
