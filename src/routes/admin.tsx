@@ -276,7 +276,7 @@ function AdminPage() {
             <DemuPanel rows={data.demu} refresh={load} />
           </TabsContent>
           <TabsContent value="viewers" className="mt-4">
-            <ViewersPanel count={data.viewers} />
+            <ViewersPanel count={data.viewers} refresh={load} />
           </TabsContent>
           <TabsContent value="ai" className="mt-4">
             <AiInfoPanel />
