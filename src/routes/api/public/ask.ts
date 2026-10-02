@@ -10,6 +10,7 @@ const CORS = {
 
 const Body = z.object({
   question: z.string().trim().min(1).max(500),
+  question_id: z.string().uuid().optional(),
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }))
     .max(10)
@@ -124,6 +125,7 @@ export const Route = createFileRoute("/api/public/ask")({
         const stream = new ReadableStream({
           async start(controller) {
             let buf = "";
+            let full = "";
             try {
               while (true) {
                 const { done, value } = await reader.read();
@@ -139,6 +141,7 @@ export const Route = createFileRoute("/api/public/ask")({
                   try {
                     const ev = JSON.parse(data);
                     if (ev.type === "response.output_text.delta" && ev.delta) {
+                      full += ev.delta;
                       controller.enqueue(enc.encode(ev.delta));
                     }
                   } catch {
@@ -147,6 +150,20 @@ export const Route = createFileRoute("/api/public/ask")({
                 }
               }
             } finally {
+              const qid = parsed.data.question_id;
+              if (qid && full) {
+                try {
+                  const url = process.env.SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL;
+                  const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+                  const sb = createClient(url, key, { auth: { persistSession: false } });
+                  await (sb as any)
+                    .from("ai_questions")
+                    .update({ answer: full, status: "answered", answered_at: new Date().toISOString() })
+                    .eq("id", qid);
+                } catch {
+                  /* ignore */
+                }
+              }
               controller.close();
             }
           },
