@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_questions: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          created_at: string
+          device_id: string
+          id: string
+          question: string
+          status: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string
+          device_id: string
+          id?: string
+          question: string
+          status?: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string
+          device_id?: string
+          id?: string
+          question?: string
+          status?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
