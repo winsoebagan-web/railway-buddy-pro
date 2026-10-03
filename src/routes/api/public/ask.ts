@@ -119,21 +119,27 @@ export const Route = createFileRoute("/api/public/ask")({
           { role: "user", parts: [{ text: question }] },
         ];
 
-        let res: Response;
+        // Primary model, with fallbacks when Google reports overload (503) or model retired (404)
+        const models = ["gemini-flash-latest", "gemini-3-flash-preview", "gemini-flash-lite-latest"];
+        let res!: Response;
         try {
-          res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              signal: AbortSignal.timeout(45000),
-              body: JSON.stringify({
-                systemInstruction: { parts: [{ text: system }] },
-                contents,
-                generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
-              }),
-            },
-          );
+          for (const model of models) {
+            res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: AbortSignal.timeout(45000),
+                body: JSON.stringify({
+                  systemInstruction: { parts: [{ text: system }] },
+                  contents,
+                  generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
+                }),
+              },
+            );
+            if (res.status !== 503 && res.status !== 404) break;
+            console.error("Gemini fallback", model, res.status);
+          }
         } catch (e) {
           const timeout = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
           return fail(timeout ? "AI ဖြေကြားချိန် ကြာလွန်းပါသည်။ ပြန်မေးပါ။" : "AI ဆာဗာနှင့် ချိတ်ဆက်၍ မရပါ။", 504);
@@ -149,7 +155,7 @@ export const Route = createFileRoute("/api/public/ask")({
 
         const data: any = await res.json().catch(() => null);
         const answer = ((data?.candidates?.[0]?.content?.parts ?? []) as { text?: string }[])
-          .map((p) => p.text ?? "")
+          .filter((p: any) => !p.thought).map((p) => p.text ?? "")
           .join("")
           .trim();
         if (!answer) return fail("AI ထံမှ အဖြေ မရပါ။ ပြန်မေးပါ။", 502);
