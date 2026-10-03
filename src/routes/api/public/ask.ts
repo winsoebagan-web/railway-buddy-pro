@@ -122,7 +122,7 @@ export const Route = createFileRoute("/api/public/ask")({
         let res: Response;
         try {
           res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -149,7 +149,7 @@ export const Route = createFileRoute("/api/public/ask")({
 
         const data: any = await res.json().catch(() => null);
         const answer = ((data?.candidates?.[0]?.content?.parts ?? []) as { text?: string }[])
-          .map((p) => p.text ?? "")
+          .filter((p: any) => !p.thought).map((p) => p.text ?? "")
           .join("")
           .trim();
         if (!answer) return fail("AI ထံမှ အဖြေ မရပါ။ ပြန်မေးပါ။", 502);
