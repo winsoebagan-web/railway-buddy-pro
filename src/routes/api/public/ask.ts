@@ -11,6 +11,8 @@ const CORS = {
 const Body = z.object({
   question: z.string().trim().min(1).max(500),
   question_id: z.string().uuid().optional(),
+  questionId: z.string().uuid().optional(),
+  userId: z.string().min(8).max(64).optional(),
   history: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }))
     .max(10)
@@ -73,104 +75,92 @@ export const Route = createFileRoute("/api/public/ask")({
         if (!parsed.success) {
           return Response.json({ error: "မေးခွန်း မမှန်ကန်ပါ" }, { status: 400, headers: CORS });
         }
-        const apiKey = process.env.LOVABLE_API_KEY;
-        if (!apiKey) return Response.json({ error: "AI မချိတ်ဆက်ရသေးပါ" }, { status: 500, headers: CORS });
+        const { question } = parsed.data;
+        const questionId = parsed.data.questionId ?? parsed.data.question_id;
+        const userId = parsed.data.userId;
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const db = supabaseAdmin as any;
 
-        const context = await buildContext();
-        const system = `သင်သည် မိုးညှင်း ရထားခရီးစဉ် App ၏ အကူအညီပေးသူ ဖြစ်သည်။ အောက်ပါ App မှတ်တမ်း (အချိန်ဇယား၊ ဘူတာ၊ လက်မှတ်ခ ကျပ်ဖြင့်) ကိုသာ အခြေခံ၍ မြန်မာဘာသာဖြင့် တိုတိုရှင်းရှင်း ဖြေပါ။ ဘူတာနှစ်ခုကြား လက်မှတ်ခ = ဆိုက်ရောက်ဘူတာ၏ လက်မှတ်ခ နုတ် ထွက်ခွာဘူတာ၏ လက်မှတ်ခ။ မှတ်တမ်းတွင် မပါသည်ကို မခန့်မှန်းပါနှင့်၊ မသိပါက မသိကြောင်းပြော၍ Hotline 1188 သို့မဟုတ် https://ortp.railways.gov.mm/ ကို ညွှန်းပါ။\n\n${context}`;
+        // Ensure the pending record exists and belongs to this device
+        if (questionId) {
+          const { data: row } = await db
+            .from("ai_questions")
+            .select("id,device_id,status,answer")
+            .eq("id", questionId)
+            .maybeSingle();
+          if (!row) {
+            if (!userId) return Response.json({ error: "မေးခွန်း မမှန်ကန်ပါ" }, { status: 400, headers: CORS });
+            await db.from("ai_questions").insert({ id: questionId, device_id: userId, question, status: "pending" });
+          } else if (userId && row.device_id !== userId) {
+            return Response.json({ error: "ခွင့်မပြုပါ" }, { status: 403, headers: CORS });
+          } else if (row.status === "answered" && row.answer) {
+            return Response.json({ answer: row.answer, status: "answered" }, { headers: CORS });
+          } else if (row.status === "error") {
+            await db.from("ai_questions").update({ status: "pending" }).eq("id", questionId);
+          }
+        }
 
-        const input = [
-          { role: "system", content: system },
-          ...(parsed.data.history ?? []),
-          { role: "user", content: parsed.data.question },
+        const fail = async (msg: string, status: number) => {
+          if (questionId) await db.from("ai_questions").update({ status: "error" }).eq("id", questionId);
+          return Response.json({ error: msg, status: "error" }, { status, headers: CORS });
+        };
+
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) return fail("AI မချိတ်ဆက်ရသေးပါ (Gemini Key မရှိ)", 500);
+
+        const context = await buildContext().catch(() => "");
+        const system = `သင်သည် မိုးညှင်း ရထားခရီးစဉ် App ၏ အကူအညီပေးသူ ဖြစ်သည်။ အောက်ပါ App မှတ်တမ်း (အချိန်ဇယား၊ ဘူတာ၊ လက်မှတ်ခ ကျပ်ဖြင့်၊ မီး/ကားလမ်း/ဖုန်းသတင်း) ကိုသာ အခြေခံ၍ မြန်မာဘာသာဖြင့် တိုတိုရှင်းရှင်း ဖြေပါ။ ဘူတာနှစ်ခုကြား လက်မှတ်ခ = ဆိုက်ရောက်ဘူတာ၏ လက်မှတ်ခ နုတ် ထွက်ခွာဘူတာ၏ လက်မှတ်ခ။ မှတ်တမ်းတွင် မပါသည်ကို မခန့်မှန်းပါနှင့်၊ မသိပါက မသိကြောင်းပြော၍ Hotline 1188 သို့မဟုတ် https://ortp.railways.gov.mm/ ကို ညွှန်းပါ။\n\n${context}`;
+
+        const contents = [
+          ...(parsed.data.history ?? []).map((h) => ({
+            role: h.role === "assistant" ? "model" : "user",
+            parts: [{ text: h.content }],
+          })),
+          { role: "user", parts: [{ text: question }] },
         ];
 
-        let upstream: Response;
+        let res: Response;
         try {
-          upstream = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-            method: "POST",
-            signal: request.signal,
-            headers: {
-              "Content-Type": "application/json",
-              "Lovable-API-Key": apiKey,
-              "X-Lovable-AIG-SDK": "fetch",
+          res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              signal: AbortSignal.timeout(45000),
+              body: JSON.stringify({
+                systemInstruction: { parts: [{ text: system }] },
+                contents,
+                generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
+              }),
             },
-            body: JSON.stringify({
-              model: "openai/gpt-6-astra",
-              input,
-              stream: true,
-              store: false,
-              reasoning: { effort: "low", summary: "auto" },
-              include: ["reasoning.encrypted_content"],
-            }),
-          });
-        } catch {
-          return new Response(null, { status: 499, headers: CORS });
+          );
+        } catch (e) {
+          const timeout = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
+          return fail(timeout ? "AI ဖြေကြားချိန် ကြာလွန်းပါသည်။ ပြန်မေးပါ။" : "AI ဆာဗာနှင့် ချိတ်ဆက်၍ မရပါ။", 504);
         }
 
-        if (!upstream.ok || !upstream.body) {
-          const msg =
-            upstream.status === 429
-              ? "မေးခွန်းများလွန်းနေပါသည်။ ခဏနေမှ ပြန်မေးပါ။"
-              : upstream.status === 402
-                ? "AI အသုံးပြုခွင့် ကုန်သွားပါပြီ။"
-                : "AI ဖြေကြားမှု မအောင်မြင်ပါ။";
-          return Response.json({ error: msg }, { status: upstream.status, headers: CORS });
+        if (!res.ok) {
+          console.error("Gemini error", res.status, (await res.text().catch(() => "")).slice(0, 500));
+          if (res.status === 429) return fail("မေးခွန်းများလွန်းနေပါသည်။ ခဏနေမှ ပြန်မေးပါ။", 429);
+          if (res.status === 401 || res.status === 403) return fail("Gemini Key မမှန်ကန်ပါ။", 502);
+          if (res.status === 400) return fail("AI တောင်းဆိုမှု မမှန်ကန်ပါ။", 502);
+          return fail("AI ဖြေကြားမှု မအောင်မြင်ပါ။", 502);
         }
 
-        // Convert SSE to plain text stream of answer deltas
-        const reader = upstream.body.getReader();
-        const dec = new TextDecoder();
-        const enc = new TextEncoder();
-        const stream = new ReadableStream({
-          async start(controller) {
-            let buf = "";
-            let full = "";
-            try {
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                buf += dec.decode(value, { stream: true });
-                let i;
-                while ((i = buf.indexOf("\n")) >= 0) {
-                  const line = buf.slice(0, i).trim();
-                  buf = buf.slice(i + 1);
-                  if (!line.startsWith("data:")) continue;
-                  const data = line.slice(5).trim();
-                  if (!data || data === "[DONE]") continue;
-                  try {
-                    const ev = JSON.parse(data);
-                    if (ev.type === "response.output_text.delta" && ev.delta) {
-                      full += ev.delta;
-                      controller.enqueue(enc.encode(ev.delta));
-                    }
-                  } catch {
-                    /* ignore */
-                  }
-                }
-              }
-            } finally {
-              const qid = parsed.data.question_id;
-              if (qid && full) {
-                try {
-                  const url = process.env.SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL;
-                  const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-                  const sb = createClient(url, key, { auth: { persistSession: false } });
-                  await (sb as any)
-                    .from("ai_questions")
-                    .update({ answer: full, status: "answered", answered_at: new Date().toISOString() })
-                    .eq("id", qid);
-                } catch {
-                  /* ignore */
-                }
-              }
-              controller.close();
-            }
-          },
-        });
-        return new Response(stream, {
-          headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" },
-        });
+        const data: any = await res.json().catch(() => null);
+        const answer = ((data?.candidates?.[0]?.content?.parts ?? []) as { text?: string }[])
+          .map((p) => p.text ?? "")
+          .join("")
+          .trim();
+        if (!answer) return fail("AI ထံမှ အဖြေ မရပါ။ ပြန်မေးပါ။", 502);
+
+        if (questionId) {
+          await db
+            .from("ai_questions")
+            .update({ answer, status: "answered", answered_at: new Date().toISOString() })
+            .eq("id", questionId);
+        }
+        return Response.json({ answer, status: "answered" }, { headers: CORS });
       },
     },
   },

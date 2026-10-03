@@ -8,7 +8,7 @@ type Item = {
   id: string;
   question: string;
   answer: string | null;
-  status: "pending" | "answered";
+  status: "pending" | "answered" | "error";
   created_at: string;
   read: boolean;
 };
@@ -103,26 +103,21 @@ export function AskAI() {
             { role: "user" as const, content: x.question },
             { role: "assistant" as const, content: (x.answer ?? "").slice(0, 4000) },
           ]);
+        update((prev) => prev.map((x) => (x.id === it.id ? { ...x, status: "pending" } : x)));
         const res = await fetch(endpoint(), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: it.question, question_id: it.id, history }),
+          body: JSON.stringify({ question: it.question, questionId: it.id, userId: deviceId(), history }),
         });
-        if (!res.ok || !res.body) {
-          const j = await res.json().catch(() => ({}));
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.answer) {
+          update((prev) =>
+            prev.map((x) => (x.id === it.id ? { ...x, status: "error", answer: j.error ?? "အဖြေ မရနိုင်ပါ" } : x)),
+          );
           toast.error(j.error ?? "အဖြေ မရနိုင်ပါ။ ခဏနေမှ ပြန်မေးပါ။");
           return;
         }
-        const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let acc = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          acc += dec.decode(value, { stream: true });
-          update((prev) => prev.map((x) => (x.id === it.id ? { ...x, answer: acc } : x)));
-        }
-        if (acc) applyAnswer(it.id, acc);
+        applyAnswer(it.id, j.answer);
       } catch {
         /* stays pending; retried on reconnect */
       } finally {
