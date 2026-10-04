@@ -8,7 +8,7 @@ type Item = {
   id: string;
   question: string;
   answer: string | null;
-  status: "pending" | "answered" | "error";
+  status: "pending" | "answered" | "error" | "needs_admin_review";
   created_at: string;
   read: boolean;
 };
@@ -110,6 +110,10 @@ export function AskAI() {
           body: JSON.stringify({ question: it.question, questionId: it.id, userId: deviceId(), history }),
         });
         const j = await res.json().catch(() => ({}));
+        if (j.status === "needs_admin_review") {
+          update((prev) => prev.map((x) => (x.id === it.id ? { ...x, status: "needs_admin_review" } : x)));
+          return;
+        }
         if (!res.ok || !j.answer) {
           update((prev) =>
             prev.map((x) => (x.id === it.id ? { ...x, status: "error", answer: j.error ?? "အဖြေ မရနိုင်ပါ" } : x)),
@@ -144,6 +148,8 @@ export function AskAI() {
         if (!local) map.set(r.id, { ...r, read: false });
         else if (r.status === "answered" && local.status !== "answered")
           map.set(r.id, { ...local, answer: r.answer, status: "answered" });
+        else if (r.status === "needs_admin_review" && local.status === "pending")
+          map.set(r.id, { ...local, status: "needs_admin_review" });
       }
       return [...map.values()];
     });
@@ -170,6 +176,8 @@ export function AskAI() {
         { event: "UPDATE", schema: "public", table: "ai_questions", filter: `device_id=eq.${deviceId()}` },
         (p: any) => {
           if (p.new?.status === "answered" && p.new.answer) applyAnswer(p.new.id, p.new.answer);
+          else if (p.new?.status === "needs_admin_review")
+            update((prev) => prev.map((x) => (x.id === p.new.id && x.status !== "answered" ? { ...x, status: "needs_admin_review" } : x)));
         },
       )
       .subscribe();
@@ -178,7 +186,7 @@ export function AskAI() {
       window.removeEventListener("offline", off);
       db.removeChannel(ch);
     };
-  }, [sync, applyAnswer]);
+  }, [sync, applyAnswer, update]);
 
   // mark answered items read when panel open
   useEffect(() => {
@@ -262,9 +270,11 @@ export function AskAI() {
                     {m.question}
                   </div>
                   <div className="mr-8 whitespace-pre-wrap rounded-xl bg-leaf-soft px-3 py-2 text-foreground">
-                    {m.answer || (online ? "စဉ်းစားနေပါသည်…" : "အင်တာနက်ပြန်ရလျှင် ဖြေပေးပါမည်")}
+                    {m.status === "needs_admin_review"
+                      ? "လက်ရှိတွင် စီမံခန့်ခွဲသူ (Admin) မှ တိုက်ရိုက်ပြန်လည်ဖြေကြားပေးပါမည်။ ခဏစောင့်ဆိုင်းပေးပါခင်ဗျာ။"
+                      : m.answer || (online ? "ခဏစောင့်ဆိုင်းပေးပါ... AI အဖြေထုတ်ပေးနေပါသည်..." : "အင်တာနက်ပြန်ရလျှင် ဖြေပေးပါမည်")}
                     <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-                      {m.status === "pending" ? (
+                      {m.status === "pending" || m.status === "needs_admin_review" ? (
                         <><Clock className="size-3" /> စောင့်ဆိုင်းဆဲ</>
                       ) : m.read ? (
                         <><CheckCheck className="size-3" /> ဖတ်ပြီး</>

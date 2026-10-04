@@ -54,6 +54,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AiInfoPanel } from "@/components/admin/AiInfoPanel";
+import { AiQuestionsPanel } from "@/components/admin/AiQuestionsPanel";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -279,6 +280,7 @@ function AdminPage() {
             <ViewersPanel count={data.viewers} refresh={load} />
           </TabsContent>
           <TabsContent value="ai" className="mt-4">
+            <AiQuestionsPanel />
             <AiInfoPanel />
           </TabsContent>
         </Tabs>
