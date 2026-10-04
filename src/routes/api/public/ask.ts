@@ -101,10 +101,20 @@ export const Route = createFileRoute("/api/public/ask")({
           }
         }
 
-        const fail = async (msg: string, status: number) => {
-          if (questionId) await db.from("ai_questions").update({ status: "error" }).eq("id", questionId);
-          return Response.json({ error: msg, status: "error" }, { status, headers: CORS });
+        const ADMIN_MSG =
+          "လက်ရှိတွင် စီမံခန့်ခွဲသူ (Admin) မှ တိုက်ရိုက်ပြန်လည်ဖြေကြားပေးပါမည်။ ခဏစောင့်ဆိုင်းပေးပါခင်ဗျာ။";
+        const toAdmin = async () => {
+          if (questionId) await db.from("ai_questions").update({ status: "needs_admin_review" }).eq("id", questionId);
+          return Response.json({ status: "needs_admin_review", message: ADMIN_MSG }, { headers: CORS });
         };
+        // AI failures go to the Admin inbox instead of a dead end
+        const fail = async (msg: string, _status: number) => {
+          console.error("AI fail:", msg);
+          return toAdmin();
+        };
+
+        const { data: mode } = await db.from("app_settings").select("value").eq("key", "ai_mode").maybeSingle();
+        if (mode?.value?.enabled === false) return toAdmin();
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) return fail("AI မချိတ်ဆက်ရသေးပါ (Gemini Key မရှိ)", 500);
@@ -121,10 +131,13 @@ export const Route = createFileRoute("/api/public/ask")({
         ];
 
         // Primary model, with fallbacks when Google reports overload (503) or model retired (404)
-        const models = ["gemini-flash-latest", "gemini-3-flash-preview", "gemini-flash-lite-latest"];
+        const models = ["gemini-1.5-flash", "gemini-flash-latest", "gemini-3-flash-preview", "gemini-flash-lite-latest"];
         let res!: Response;
         try {
-          for (const model of models) {
+          const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+          outer: for (const model of models) {
+           for (const wait of [0, 5000, 10000]) {
+            if (wait) await sleep(wait);
             res = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
               {
@@ -138,8 +151,11 @@ export const Route = createFileRoute("/api/public/ask")({
                 }),
               },
             );
-            if (res.status !== 503 && res.status !== 404) break;
+            if (res.status === 429) { console.error("Gemini 429, retry", model); continue; }
+            if (res.status !== 503 && res.status !== 404) break outer;
             console.error("Gemini fallback", model, res.status);
+            continue outer;
+           }
           }
         } catch (e) {
           const timeout = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
