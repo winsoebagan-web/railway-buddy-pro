@@ -27,7 +27,7 @@ async function buildContext() {
     sb.from("trains").select("*").eq("is_visible", true).order("sort_order"),
     sb.from("train_stops").select("*").order("stop_order"),
     sb.from("demu_schedules").select("*").order("sort_order"),
-    (sb as any).from("ai_info").select("category,content,updated_at").eq("is_visible", true).order("sort_order"),
+    (sb as any).from("ai_info").select("category,title,content,updated_at").eq("is_visible", true).order("sort_order"),
   ]);
   const lines: string[] = [];
   for (const t of (trains.data ?? []) as any[]) {
@@ -61,7 +61,8 @@ async function buildContext() {
     const items = ((info.data ?? []) as any[]).filter((x) => x.category === k);
     if (!items.length) continue;
     lines.push(`## ${label}`);
-    for (const x of items) lines.push(`- (${String(x.updated_at ?? "").slice(0, 10)}) ${x.content}`);
+    for (const x of items)
+      lines.push(`- ${x.title ? `[${x.title}] ` : ""}(${String(x.updated_at ?? "").slice(0, 10)}) ${x.content}`);
   }
   return lines.join("\n");
 }

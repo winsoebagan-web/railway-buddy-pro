@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-type Row = { id: string; category: string; content: string; is_visible: boolean; sort_order: number };
+type Row = { id: string; category: string; title: string; content: string; is_visible: boolean; sort_order: number };
 
 const CATS = [
   { v: "electricity", l: "လျှပ်စစ်မီးသတင်း" },
@@ -20,6 +20,7 @@ const db = supabase as any;
 export function AiInfoPanel() {
   const [rows, setRows] = useState<Row[]>([]);
   const [cat, setCat] = useState("electricity");
+  const [title, setTitle] = useState("");
   const [text, setText] = useState("");
 
   const load = useCallback(async () => {
@@ -54,11 +55,21 @@ export function AiInfoPanel() {
             <option key={c.v} value={c.v}>{c.l}</option>
           ))}
         </select>
+        <input
+          className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+          maxLength={200}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="သတင်းအမည် (ခေါင်းစဉ်)"
+        />
         <Textarea rows={4} maxLength={3000} value={text} onChange={(e) => setText(e.target.value)} placeholder="သတင်းအကြောင်းအရာ" />
         <Button
           onClick={() => {
             if (!text.trim()) return;
-            void run(db.from("ai_info").insert({ category: cat, content: text.trim(), sort_order: rows.length + 1 }));
+            void run(
+              db.from("ai_info").insert({ category: cat, title: title.trim(), content: text.trim(), sort_order: rows.length + 1 }),
+            );
+            setTitle("");
             setText("");
           }}
         >
@@ -75,6 +86,16 @@ export function AiInfoPanel() {
             .filter((r) => r.category === c.v)
             .map((r) => (
               <div key={r.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                <input
+                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                  maxLength={200}
+                  defaultValue={r.title ?? ""}
+                  onBlur={(e) =>
+                    e.target.value !== (r.title ?? "") &&
+                    run(db.from("ai_info").update({ title: e.target.value }).eq("id", r.id))
+                  }
+                  placeholder="သတင်းအမည် (ခေါင်းစဉ်)"
+                />
                 <Textarea
                   rows={3}
                   maxLength={3000}
