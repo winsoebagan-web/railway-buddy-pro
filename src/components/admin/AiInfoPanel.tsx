@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,34 +9,78 @@ import { Switch } from "@/components/ui/switch";
 
 type Row = { id: string; category: string; title: string; content: string; is_visible: boolean; sort_order: number };
 
-const CATS = [
-  { v: "electricity", l: "လျှပ်စစ်မီးသတင်း" },
+const DEFAULT_CATS = [
+  { v: "electricity", l: "လျှပ်စီးသတင်း" },
   { v: "road", l: "ကားလမ်းသတင်း" },
   { v: "phone", l: "ဖုန်းအင်တာနက်သတင်း" },
 ];
+
+const NEW_CAT = "__new__";
 
 const db = supabase as any;
 
 export function AiInfoPanel() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [customCats, setCustomCats] = useState<string[]>([]);
   const [cat, setCat] = useState("electricity");
+  const [newCat, setNewCat] = useState("");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
 
   const load = useCallback(async () => {
-    const { data, error } = await db.from("ai_info").select("*").order("sort_order");
+    const [{ data, error }, { data: catRow }] = await Promise.all([
+      db.from("ai_info").select("*").order("sort_order"),
+      db.from("app_settings").select("value").eq("key", "ai_categories").maybeSingle(),
+    ]);
     if (error) toast.error(error.message);
     setRows((data ?? []) as Row[]);
+    const saved = (catRow?.value?.list as string[] | undefined) ?? [];
+    setCustomCats(saved.filter((c) => typeof c === "string" && c.trim()));
   }, []);
   useEffect(() => {
     void load();
   }, [load]);
+
+  // All known categories: defaults + custom + any already used by existing rows
+  const cats = useMemo(() => {
+    const labels = new Map<string, string>(DEFAULT_CATS.map((c) => [c.v, c.l]));
+    for (const c of customCats) if (!labels.has(c)) labels.set(c, c);
+    for (const r of rows) if (!labels.has(r.category)) labels.set(r.category, r.category);
+    return [...labels.entries()].map(([v, l]) => ({ v, l }));
+  }, [customCats, rows]);
 
   async function run(p: PromiseLike<{ error: any }>, ok = "သိမ်းပြီး") {
     const { error } = await p;
     if (error) toast.error(error.message);
     else toast.success(ok);
     void load();
+  }
+
+  async function saveCustomCats(list: string[]) {
+    await db
+      .from("app_settings")
+      .upsert({ key: "ai_categories", value: { list }, updated_at: new Date().toISOString() });
+  }
+
+  async function addItem() {
+    const category = cat === NEW_CAT ? newCat.trim() : cat;
+    if (!category) {
+      toast.error("အမျိုးအစားအမည် ထည့်ပါ");
+      return;
+    }
+    if (!text.trim()) return;
+    if (cat === NEW_CAT && !customCats.includes(category)) {
+      const next = [...customCats, category];
+      setCustomCats(next);
+      await saveCustomCats(next);
+    }
+    await run(
+      db.from("ai_info").insert({ category, title: title.trim(), content: text.trim(), sort_order: rows.length + 1 }),
+    );
+    setCat(category);
+    setNewCat("");
+    setTitle("");
+    setText("");
   }
 
   return (
@@ -51,10 +95,20 @@ export function AiInfoPanel() {
           value={cat}
           onChange={(e) => setCat(e.target.value)}
         >
-          {CATS.map((c) => (
+          {cats.map((c) => (
             <option key={c.v} value={c.v}>{c.l}</option>
           ))}
+          <option value={NEW_CAT}>+ အမျိုးအစားအသစ် ထည့်မည်</option>
         </select>
+        {cat === NEW_CAT && (
+          <input
+            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            maxLength={60}
+            value={newCat}
+            onChange={(e) => setNewCat(e.target.value)}
+            placeholder="အမျိုးအစည်အသစ် (ဥပမာ - ရထားသတင်း)"
+          />
+        )}
         <input
           className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
           maxLength={200}
@@ -63,20 +117,11 @@ export function AiInfoPanel() {
           placeholder="သတင်းအမည် (ခေါင်းစဉ်)"
         />
         <Textarea rows={4} maxLength={3000} value={text} onChange={(e) => setText(e.target.value)} placeholder="သတင်းအကြောင်းအရာ" />
-        <Button
-          onClick={() => {
-            if (!text.trim()) return;
-            void run(
-              db.from("ai_info").insert({ category: cat, title: title.trim(), content: text.trim(), sort_order: rows.length + 1 }),
-            );
-            setTitle("");
-            setText("");
-          }}
-        >
+        <Button onClick={() => void addItem()}>
           <Plus className="size-4" /> တင်မည်
         </Button>
       </div>
-      {CATS.map((c) => (
+      {cats.map((c) => (
         <div key={c.v} className="space-y-2">
           <h3 className="text-sm font-bold">{c.l}</h3>
           {rows.filter((r) => r.category === c.v).length === 0 && (
