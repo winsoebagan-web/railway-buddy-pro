@@ -57,10 +57,14 @@ async function buildContext() {
     road: "ကားလမ်းသတင်း",
     phone: "ဖုန်းအင်တာနက်သတင်း",
   };
-  for (const [k, label] of Object.entries(names)) {
-    const items = ((info.data ?? []) as any[]).filter((x) => x.category === k);
-    if (!items.length) continue;
-    lines.push(`## ${label}`);
+  const groups = new Map<string, any[]>();
+  for (const x of (info.data ?? []) as any[]) {
+    const list = groups.get(x.category) ?? [];
+    list.push(x);
+    groups.set(x.category, list);
+  }
+  for (const [cat, items] of groups) {
+    lines.push(`## ${names[cat] ?? cat}`);
     for (const x of items)
       lines.push(`- ${x.title ? `[${x.title}] ` : ""}(${String(x.updated_at ?? "").slice(0, 10)}) ${x.content}`);
   }
