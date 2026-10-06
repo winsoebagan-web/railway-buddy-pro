@@ -3,6 +3,7 @@ import { Bot, Check, CheckCheck, Clock, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { LinkifiedText } from "@/lib/linkify";
 
 type Item = {
   id: string;
