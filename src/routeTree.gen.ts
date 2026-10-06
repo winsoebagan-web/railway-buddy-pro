@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ApiPublicAskRouteImport } from './routes/api/public/ask'
+import { Route as ApiPublicAutoAnswerRouteImport } from './routes/api/public/auto-answer'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,45 @@ const ApiPublicAskRoute = ApiPublicAskRouteImport.update({
   path: '/api/public/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAutoAnswerRoute = ApiPublicAutoAnswerRouteImport.update({
+  id: '/api/public/auto-answer',
+  path: '/api/public/auto-answer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/api/public/ask': typeof ApiPublicAskRoute
+  '/api/public/auto-answer': typeof ApiPublicAutoAnswerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/api/public/ask': typeof ApiPublicAskRoute
+  '/api/public/auto-answer': typeof ApiPublicAutoAnswerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/api/public/ask': typeof ApiPublicAskRoute
+  '/api/public/auto-answer': typeof ApiPublicAutoAnswerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/api/public/ask'
+  fullPaths: '/' | '/admin' | '/api/public/ask' | '/api/public/auto-answer'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/api/public/ask'
-  id: '__root__' | '/' | '/admin' | '/api/public/ask'
+  to: '/' | '/admin' | '/api/public/ask' | '/api/public/auto-answer'
+  id:
+    '__root__' | '/' | '/admin' | '/api/public/ask' | '/api/public/auto-answer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   ApiPublicAskRoute: typeof ApiPublicAskRoute
+  ApiPublicAutoAnswerRoute: typeof ApiPublicAutoAnswerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +93,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAskRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/auto-answer': {
+      id: '/api/public/auto-answer'
+      path: '/api/public/auto-answer'
+      fullPath: '/api/public/auto-answer'
+      preLoaderRoute: typeof ApiPublicAutoAnswerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +107,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ApiPublicAskRoute: ApiPublicAskRoute,
+  ApiPublicAutoAnswerRoute: ApiPublicAutoAnswerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
