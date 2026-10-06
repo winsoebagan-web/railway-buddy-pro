@@ -3,6 +3,7 @@ import { Bot, Check, CheckCheck, Clock, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { LinkifiedText } from "@/lib/linkify";
 
 type Item = {
   id: string;
@@ -270,9 +271,15 @@ export function AskAI() {
                     {m.question}
                   </div>
                   <div className="mr-8 whitespace-pre-wrap rounded-xl bg-leaf-soft px-3 py-2 text-foreground">
-                    {m.status === "needs_admin_review"
-                      ? "လက်ရှိတွင် စီမံခန့်ခွဲသူ (Admin) မှ တိုက်ရိုက်ပြန်လည်ဖြေကြားပေးပါမည်။ ခဏစောင့်ဆိုင်းပေးပါခင်ဗျာ။"
-                      : m.answer || (online ? "ခဏစောင့်ဆိုင်းပေးပါ... AI အဖြေထုတ်ပေးနေပါသည်..." : "အင်တာနက်ပြန်ရလျှင် ဖြေပေးပါမည်")}
+                    {m.answer ? (
+                      <LinkifiedText text={m.answer} />
+                    ) : m.status === "needs_admin_review" ? (
+                      "လက်ရှိတွင် စီမံခန့်ခွဲသူ (Admin) မှ တိုက်ရိုက်ပြန်လည်ဖြေကြားပေးပါမည်။ ခဏစောင့်ဆိုင်းပေးပါခင်ဗျာ။"
+                    ) : online ? (
+                      "ခဏစောင့်ဆိုင်းပေးပါ... AI အဖြေထုတ်ပေးနေပါသည်..."
+                    ) : (
+                      "အင်တာနက်ပြန်ရလျှင် ဖြေပေးပါမည်"
+                    )}
                     <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
                       {m.status === "pending" || m.status === "needs_admin_review" ? (
                         <><Clock className="size-3" /> စောင့်ဆိုင်းဆဲ</>
