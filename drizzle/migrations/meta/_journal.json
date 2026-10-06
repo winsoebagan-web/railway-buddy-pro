@@ -15,6 +15,13 @@
       "when": 1791075875033,
       "tag": "0001_ai_questions_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791254073593,
+      "tag": "0002_drop_ai_info_category_check",
+      "breakpoints": true
     }
   ]
 }

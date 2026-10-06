@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_info DROP CONSTRAINT IF EXISTS ai_info_category_check;
