@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_auto_reply_state: {
+        Row: {
+          id: boolean
+          knowledge_version: number
+          lease_token: string | null
+          lease_until: string | null
+          paused_reason: string | null
+          retry_after: string | null
+        }
+        Insert: {
+          id?: boolean
+          knowledge_version?: number
+          lease_token?: string | null
+          lease_until?: string | null
+          paused_reason?: string | null
+          retry_after?: string | null
+        }
+        Update: {
+          id?: boolean
+          knowledge_version?: number
+          lease_token?: string | null
+          lease_until?: string | null
+          paused_reason?: string | null
+          retry_after?: string | null
+        }
+        Relationships: []
+      }
       ai_info: {
         Row: {
           category: string
@@ -51,6 +78,9 @@ export type Database = {
         Row: {
           answer: string | null
           answered_at: string | null
+          auto_attempted_at: string | null
+          auto_attempts: number
+          auto_knowledge_version: number
           created_at: string
           device_id: string
           id: string
@@ -60,6 +90,9 @@ export type Database = {
         Insert: {
           answer?: string | null
           answered_at?: string | null
+          auto_attempted_at?: string | null
+          auto_attempts?: number
+          auto_knowledge_version?: number
           created_at?: string
           device_id: string
           id?: string
@@ -69,6 +102,9 @@ export type Database = {
         Update: {
           answer?: string | null
           answered_at?: string | null
+          auto_attempted_at?: string | null
+          auto_attempts?: number
+          auto_knowledge_version?: number
           created_at?: string
           device_id?: string
           id?: string
@@ -669,6 +705,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acquire_ai_auto_reply: {
+        Args: { p_token: string }
+        Returns: {
+          id: boolean
+          knowledge_version: number
+          lease_token: string | null
+          lease_until: string | null
+          paused_reason: string | null
+          retry_after: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ai_auto_reply_state"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      ai_auto_reply_candidates: {
+        Args: { p_version: number }
+        Returns: {
+          answer: string | null
+          answered_at: string | null
+          auto_attempted_at: string | null
+          auto_attempts: number
+          auto_knowledge_version: number
+          created_at: string
+          device_id: string
+          id: string
+          question: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ai_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       bump_viewers: { Args: { _by?: number }; Returns: number }
       has_role: {
         Args: {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { AI_KNOWLEDGE_CHANGED } from "@/lib/admin-auto-answer";
 
 type Row = { id: string; category: string; title: string; content: string; is_visible: boolean; sort_order: number };
 
@@ -60,7 +61,10 @@ export function AiInfoPanel() {
   async function run(p: PromiseLike<{ error: any }>, ok = "သိမ်းပြီး") {
     const { error } = await p;
     if (error) toast.error(error.message);
-    else toast.success(ok);
+    else {
+      toast.success(ok);
+      window.dispatchEvent(new Event(AI_KNOWLEDGE_CHANGED));
+    }
     void load();
   }
 

@@ -2,118 +2,138 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { buildContext } from "@/lib/ai-context.server";
+import { AUTO_NOTE, bestEffort, usableAnswer } from "@/lib/auto-answer-rules";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+const Body = z.object({ mode: z.enum(["manual", "sweep"]), ids: z.array(z.string().uuid()).max(1).optional() });
 
-const Body = z.object({
-  mode: z.enum(["manual", "sweep"]),
-  ids: z.array(z.string().uuid()).max(20).optional(),
-});
+class AIError extends Error {
+  constructor(message: string, public status: number) { super(message); }
+}
 
-const NOTE = "\n\n(AI အလိုအလျောက် ဖြေကြားချက်)";
-const NO = "NO_ANSWER";
-const STALE_MS = 30 * 60 * 1000; // after 30 min unanswered, AI gives best-effort answer
-
-async function gemini(apiKey: string, system: string, question: string): Promise<string | null> {
-  const models = ["gemini-flash-latest", "gemini-3-flash-preview", "gemini-flash-lite-latest"];
-  for (const model of models) {
-    for (const wait of [0, 5000]) {
-      if (wait) await new Promise((r) => setTimeout(r, wait));
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(45000),
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: system }] },
-            contents: [{ role: "user", parts: [{ text: question }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
-          }),
-        },
-      ).catch(() => null);
-      if (!res) continue;
-      if (res.status === 429) continue;
-      if (res.status === 503 || res.status === 404) break;
-      if (!res.ok) return null;
-      const j: any = await res.json().catch(() => null);
-      const text = (j?.candidates?.[0]?.content?.parts ?? [])
-        .filter((p: any) => !p.thought)
-        .map((p: any) => p.text ?? "")
-        .join("")
-        .trim();
-      return text || null;
+async function gemini(apiKey: string, system: string, question: string) {
+  // Preserve the working provider/model. A denial or unavailable model is terminal.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: "user", parts: [{ text: question }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const retryable = res.status === 429 || res.status >= 500;
+      if (retryable && attempt < 2) {
+        const retryAfter = Number(res.headers.get("Retry-After"));
+        await new Promise(resolve => setTimeout(resolve, Math.max(retryAfter * 1000 || 0, attempt === 0 ? 5000 : 10000)));
+        continue;
+      }
+      const message = res.status === 429 ? "AI မေးခွန်းများလွန်းနေပါသည်။ နောက်တစ်ကြိမ် စစ်ဆေးချိန်တွင် ဆက်လုပ်ပါမည်။"
+        : res.status === 401 || res.status === 403 ? "AI အသုံးပြုခွင့်ကို စစ်ဆေးပြင်ဆင်ရန် လိုအပ်ပါသည်။ အလိုအလျောက်ဖြေခြင်း ရပ်ထားပါသည်။"
+        : res.status === 404 ? "သတ်မှတ်ထားသော AI ကို လက်ရှိအသုံးမပြုနိုင်ပါ။"
+        : "AI ဖြေကြားမှု မအောင်မြင်ပါ။";
+      throw new AIError(message, res.status);
     }
+    const candidate = data?.candidates?.[0];
+    if (data?.promptFeedback?.blockReason || ["SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT"].includes(candidate?.finishReason)) {
+      throw new AIError("AI က ဤမေးခွန်းကို ဖြေကြားရန် ငြင်းဆိုပါသည်။ Admin မှ တိုက်ရိုက်ဖြေကြားပေးပါ။", 422);
+    }
+    const text = (candidate?.content?.parts ?? []).filter((p: { thought?: boolean }) => !p.thought)
+      .map((p: { text?: string }) => p.text ?? "").join("").trim();
+    if (!text) throw new AIError("AI ထံမှ အဖြေမရပါ။ Admin မှ တိုက်ရိုက်ဖြေကြားပေးပါ။", 422);
+    return text;
   }
-  return null;
+  throw new AIError("AI ဖြေကြားမှု မအောင်မြင်ပါ။", 502);
 }
 
 export const Route = createFileRoute("/api/public/auto-answer")({
-  server: {
-    handlers: {
-      OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
-      POST: async ({ request }) => {
-        // Admin only: verify the caller's session and admin role
-        const token = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-        if (!token) return Response.json({ error: "unauthorized" }, { status: 401, headers: CORS });
-        const url = process.env.SUPABASE_URL!;
-        const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-        const userSb = createClient(url, key, {
-          auth: { persistSession: false },
-          global: {
-            fetch: (input, init) => {
-              const h = new Headers(init?.headers);
-              h.set("apikey", key);
-              h.set("Authorization", `Bearer ${token}`);
-              return fetch(input, { ...init, headers: h });
-            },
-          },
-        });
-        const { data: isAdmin } = await (userSb as any).rpc("is_admin");
-        if (!isAdmin) return Response.json({ error: "forbidden" }, { status: 403, headers: CORS });
-
-        const parsed = Body.safeParse(await request.json().catch(() => null));
-        if (!parsed.success) return Response.json({ error: "bad request" }, { status: 400, headers: CORS });
-        const { mode, ids } = parsed.data;
-
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) return Response.json({ error: "Gemini key missing" }, { status: 500, headers: CORS });
-
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const db = supabaseAdmin as any;
-        let q = db
-          .from("ai_questions")
-          .select("id,question,created_at")
-          .in("status", ["pending", "needs_admin_review"])
-          .order("created_at", { ascending: true })
-          .limit(mode === "manual" ? 20 : 10);
-        if (mode === "manual") q = q.in("id", ids ?? []);
-        const { data: rows } = await q;
-
-        const context = await buildContext().catch(() => "");
-        const base = `သင်သည် မိုးညှင်း ရထားခရီးစဉ် App ၏ အကူအညီပေးသူ ဖြစ်သည်။ အောက်ပါ App မှတ်တမ်းကိုသာ အခြေခံ၍ မြန်မာဘာသာဖြင့် တိုတိုရှင်းရှင်း ဖြေပါ။ ဘူတာနှစ်ခုကြား လက်မှတ်ခ = ဆိုက်ရောက်ဘူတာ၏ လက်မှတ်ခ နုတ် ထွက်ခွာဘူတာ၏ လက်မှတ်ခ။ မှတ်တမ်းတွင် မပါသည်ကို မခန့်မှန်းပါနှင့်။`;
-        const confident = `${base} မှတ်တမ်းထဲမှ သေချာစွာ ဖြေနိုင်မှသာ ဖြေပါ။ သေချာမဖြေနိုင်ပါက ${NO} ဟုသာ ပြန်ပါ။\n\n${context}`;
-        const bestEffort = `${base} အကောင်းဆုံး ကြိုးစားဖြေပါ၊ မသိပါက Viber 09683665974 မိုးညှင်းခရိုင်လမ်းညွန် Facebook page ကို ညွှန်းပါ။\n\n${context}`;
-
+  server: { handlers: {
+    OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
+    POST: async ({ request }) => {
+      const json = (body: object, status = 200) => Response.json(body, { status, headers: CORS });
+      const token = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+      if (!token) return json({ error: "Admin ဝင်ရောက်ရန် လိုအပ်ပါသည်။" }, 401);
+      const url = process.env.SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL;
+      const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      if (!url || !key) return json({ error: "ချိတ်ဆက်မှု မပြည့်စုံပါ။" }, 500);
+      const userSb = createClient(url, key, { auth: { persistSession: false }, global: { fetch: (input, init) => {
+        const headers = new Headers(init?.headers);
+        headers.set("apikey", key); headers.set("Authorization", `Bearer ${token}`);
+        return fetch(input, { ...init, headers });
+      } } });
+      const { data: isAdmin, error: authError } = await userSb.rpc("is_admin");
+      if (authError || !isAdmin) return json({ error: "Admin သာ အသုံးပြုနိုင်ပါသည်။" }, 403);
+      const parsed = Body.safeParse(await request.json().catch(() => null));
+      if (!parsed.success || (parsed.data.mode === "manual" && parsed.data.ids?.length !== 1)) return json({ error: "မေးခွန်းရွေးချယ်ပါ။" }, 400);
+      const { mode, ids } = parsed.data;
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) return json({ error: "AI ချိတ်ဆက်မှု မရှိသေးပါ။" }, 503);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const db = supabaseAdmin as any;
+      if (mode === "sweep") {
+        const { data: setting, error } = await db.from("app_settings").select("value").eq("key", "ai_mode").maybeSingle();
+        if (error) return json({ error: error.message }, 500);
+        if (setting?.value?.enabled === false) return json({ answered: 0, checked: 0, disabled: true });
+      }
+      const lease = crypto.randomUUID();
+      const { data: locks, error: lockError } = await db.rpc("acquire_ai_auto_reply", { p_token: lease });
+      if (lockError) return json({ error: lockError.message }, 500);
+      const state = locks?.[0];
+      if (!state) return json({ answered: 0, checked: 0, busy: true });
+      try {
+        if (state.paused_reason) return json({ error: state.paused_reason, paused: true }, 409);
+        if (state.retry_after && Date.parse(state.retry_after) > Date.now()) return json({ answered: 0, checked: 0, coolingDown: true });
+        const result = mode === "manual"
+          ? await db.from("ai_questions").select("id,question,created_at,auto_attempts").in("status", ["pending", "needs_admin_review"]).in("id", ids)
+          : await db.rpc("ai_auto_reply_candidates", { p_version: state.knowledge_version });
+        if (result.error) throw new Error(result.error.message);
+        const rows = result.data ?? [];
+        if (!rows.length) return json({ answered: 0, checked: 0 });
+        // Fail closed if knowledge could not be read; never invent a context.
+        const context = await buildContext();
+        const base = `သင်သည် မိုးညှင်း ရထားခရီးစဉ် App ၏ အကူအညီပေးသူ ဖြစ်သည်။ အောက်ပါ App မှတ်တမ်းကိုသာ အခြေခံ၍ မြန်မာဘာသာဖြင့် တိုတိုရှင်းရှင်း ဖြေပါ။ ဘူတာနှစ်ခုကြား လက်မှတ်ခ = ဆိုက်ရောက်ဘူတာ၏ လက်မှတ်ခ နုတ် ထွက်ခွာဘူတာ၏ လက်မှတ်ခ။ မှတ်တမ်းတွင် မပါသည်ကို မခန့်မှန်းပါနှင့်။ Hotline 1188 နှင့် ORTP website ကို လုံးဝမညွှန်းပါနှင့်။`;
         let answered = 0;
-        for (const r of (rows ?? []) as any[]) {
-          const stale = Date.now() - new Date(r.created_at).getTime() > STALE_MS;
-          const useBest = mode === "manual" || stale;
-          const text = await gemini(apiKey, useBest ? bestEffort : confident, r.question);
-          if (!text || text.includes(NO)) continue;
-          const { error } = await db
-            .from("ai_questions")
-            .update({ answer: text + NOTE, status: "answered", answered_at: new Date().toISOString() })
-            .eq("id", r.id)
-            .in("status", ["pending", "needs_admin_review"]);
-          if (!error) answered++;
+        for (const row of rows) {
+          const { error: progressError } = await db.from("ai_questions").update({ auto_attempts: row.auto_attempts + 1, auto_attempted_at: new Date().toISOString(), auto_knowledge_version: state.knowledge_version }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]);
+          if (progressError) throw new Error(progressError.message);
+          const instruction = bestEffort(mode, row.created_at)
+            ? "အကောင်းဆုံး ကြိုးစားဖြေပါ၊ မသိပါက Viber 09683665974 မိုးညှင်းခရိုင်လမ်းညွန် Facebook pageသို့ ဆက်သွယ်နိုင်ပါသည်။ ဟု ညွှန်းပါ။"
+            : "မှတ်တမ်းထဲမှ သေချာစွာ ဖြေနိုင်မှသာ ဖြေပါ။ သေချာမဖြေနိုင်ပါက NO_ANSWER ဟုသာ ပြန်ပါ။";
+          let text: string;
+          try { text = await gemini(apiKey, `${base} ${instruction}\n\n${context}`, row.question); }
+          catch (error) {
+            if (error instanceof AIError) {
+              if ([401, 402, 403, 404].includes(error.status)) {
+                await db.from("ai_auto_reply_state").update({ paused_reason: error.message }).eq("id", true).eq("lease_token", lease);
+              } else if (error.status === 429 || error.status >= 500) {
+                await db.from("ai_auto_reply_state").update({ retry_after: new Date(Date.now() + 5 * 60_000).toISOString() }).eq("id", true).eq("lease_token", lease);
+              } else if (error.status === 422) {
+                await db.from("ai_questions").update({ auto_attempts: 3 }).eq("id", row.id);
+              }
+              return json({ error: error.message, answered }, error.status);
+            }
+            throw error;
+          }
+          if (!usableAnswer(text)) continue;
+          // An Admin reply or deletion made while AI is working always wins.
+          const saved = await db.from("ai_questions").update({ answer: text + AUTO_NOTE, status: "answered", answered_at: new Date().toISOString() }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]).is("answer", null).select("id");
+          if (saved.error) throw new Error(saved.error.message);
+          answered += saved.data?.length ?? 0;
         }
-        return Response.json({ answered, checked: rows?.length ?? 0 }, { headers: CORS });
-      },
+        return json({ answered, checked: rows.length });
+      } catch (error) {
+        console.error("Auto answer failed", error instanceof Error ? error.message : "unknown");
+        return json({ error: "အလိုအလျောက်ဖြေကြားမှု မအောင်မြင်ပါ။ Admin မှ တိုက်ရိုက်ဖြေကြားနိုင်ပါသည်။" }, 500);
+      } finally {
+        await db.from("ai_auto_reply_state").update({ lease_token: null, lease_until: null }).eq("id", true).eq("lease_token", lease);
+      }
     },
-  },
+  } },
 });

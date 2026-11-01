@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Send, Trash2 } from "lucide-react";
+import { Bot, Loader2, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { AI_ANSWER_UPDATED, requestAutoAnswer } from "@/lib/admin-auto-answer";
 
 type Q = { id: string; question: string; status: string; created_at: string };
 const db = supabase as any;
@@ -13,6 +14,7 @@ export function AiQuestionsPanel() {
   const [enabled, setEnabled] = useState(true);
   const [rows, setRows] = useState<Q[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [answering, setAnswering] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [s, q] = await Promise.all([
@@ -31,11 +33,16 @@ export function AiQuestionsPanel() {
 
   useEffect(() => {
     void load();
+    const refresh = () => void load();
+    window.addEventListener(AI_ANSWER_UPDATED, refresh);
+    const polling = window.setInterval(refresh, 15_000);
     const ch = db
       .channel("admin_ai_q")
       .on("postgres_changes", { event: "*", schema: "public", table: "ai_questions" }, () => void load())
       .subscribe();
     return () => {
+      window.removeEventListener(AI_ANSWER_UPDATED, refresh);
+      window.clearInterval(polling);
       db.removeChannel(ch);
     };
   }, [load]);
@@ -61,6 +68,21 @@ export function AiQuestionsPanel() {
     if (error) return toast.error(error.message);
     toast.success("ဖြေကြားပြီး");
     setRows((r) => r.filter((x) => x.id !== id));
+  }
+
+  async function autoAnswer(id: string) {
+    if (answering) return;
+    setAnswering(id);
+    try {
+      const result = await requestAutoAnswer("manual", id);
+      if (result.answered) toast.success("AI ဖြေကြားပြီး");
+      else if (result.busy) toast("AI က အခြားမေးခွန်းကို ဖြေနေပါသည်။ ခဏနေမှ ထပ်နှိပ်ပါ။");
+      else if (result.coolingDown) toast("ခဏစောင့်ပြီး ထပ်နှိပ်ပါ။");
+      else toast("အဖြေ မတင်နိုင်သေးပါ။ Admin မှ တိုက်ရိုက်ဖြေကြားနိုင်ပါသည်။");
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "AI ဖြေကြားမှု မအောင်မြင်ပါ။");
+    } finally { setAnswering(null); }
   }
 
   async function remove(id: string) {
@@ -95,9 +117,15 @@ export function AiQuestionsPanel() {
             placeholder="အဖြေ ရိုက်ထည့်ပါ…"
             rows={2}
           />
-          <Button size="sm" onClick={() => reply(q.id)} disabled={!(drafts[q.id] ?? "").trim()}>
+          <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => reply(q.id)} disabled={answering === q.id || !(drafts[q.id] ?? "").trim()}>
             <Send className="mr-1 size-4" /> Reply
           </Button>
+          <Button size="sm" variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal text-left" onClick={() => void autoAnswer(q.id)} disabled={answering !== null}>
+            {answering === q.id ? <Loader2 className="size-4 shrink-0 animate-spin" /> : <Bot className="size-4 shrink-0" />}
+            {answering === q.id ? "AI ဖြေကြားနေပါသည်…" : "AI ဖြင့် အလိုအလျောက် ဖြေမည်"}
+          </Button>
+          </div>
         </div>
       ))}
     </div>

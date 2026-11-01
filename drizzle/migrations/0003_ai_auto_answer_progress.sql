@@ -1,0 +1,14 @@
+ALTER TABLE public.ai_questions ADD COLUMN IF NOT EXISTS auto_attempts integer NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS auto_attempted_at timestamptz, ADD COLUMN IF NOT EXISTS auto_knowledge_version bigint NOT NULL DEFAULT -1;
+CREATE TABLE public.ai_auto_reply_state (id boolean PRIMARY KEY DEFAULT true CHECK (id), knowledge_version bigint NOT NULL DEFAULT 0, lease_token uuid, lease_until timestamptz, paused_reason text, retry_after timestamptz);
+GRANT SELECT ON public.ai_auto_reply_state TO authenticated;
+GRANT ALL ON public.ai_auto_reply_state TO service_role;
+ALTER TABLE public.ai_auto_reply_state ENABLE ROW LEVEL SECURITY;
+CREATE POLICY admin_auto_reply_read ON public.ai_auto_reply_state FOR SELECT TO authenticated USING (public.is_admin());
+CREATE OR REPLACE FUNCTION public.ai_knowledge_changed() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN INSERT INTO public.ai_auto_reply_state(id,knowledge_version) VALUES(true,1) ON CONFLICT(id) DO UPDATE SET knowledge_version=ai_auto_reply_state.knowledge_version+1; RETURN NULL; END $$;
+CREATE TRIGGER ai_info_auto_reply_revision AFTER INSERT OR UPDATE OR DELETE ON public.ai_info FOR EACH STATEMENT EXECUTE FUNCTION public.ai_knowledge_changed();
+CREATE OR REPLACE FUNCTION public.acquire_ai_auto_reply(p_token uuid) RETURNS SETOF public.ai_auto_reply_state LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN INSERT INTO public.ai_auto_reply_state(id) VALUES(true) ON CONFLICT DO NOTHING; RETURN QUERY UPDATE public.ai_auto_reply_state SET lease_token=p_token,lease_until=now()+interval '5 minutes' WHERE id=true AND (lease_until IS NULL OR lease_until<now()) RETURNING *; END $$;
+REVOKE ALL ON FUNCTION public.acquire_ai_auto_reply(uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.acquire_ai_auto_reply(uuid) TO service_role;
+CREATE OR REPLACE FUNCTION public.ai_auto_reply_candidates(p_version bigint) RETURNS SETOF public.ai_questions LANGUAGE sql SECURITY DEFINER SET search_path=public AS $$ SELECT * FROM public.ai_questions WHERE status IN ('pending','needs_admin_review') AND auto_attempts<3 AND (auto_attempted_at IS NULL OR auto_attempted_at<now()-interval '5 minutes') AND (auto_knowledge_version<p_version OR (created_at<=now()-interval '30 minutes' AND (auto_attempted_at IS NULL OR auto_attempted_at<now()-interval '6 hours'))) ORDER BY created_at LIMIT 2; $$;
+REVOKE ALL ON FUNCTION public.ai_auto_reply_candidates(bigint) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.ai_auto_reply_candidates(bigint) TO service_role;
