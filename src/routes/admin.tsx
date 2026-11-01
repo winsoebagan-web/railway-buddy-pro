@@ -55,6 +55,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AiInfoPanel } from "@/components/admin/AiInfoPanel";
 import { AiQuestionsPanel } from "@/components/admin/AiQuestionsPanel";
+import { useAdminAutoReply } from "@/lib/use-admin-auto-reply";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -65,6 +66,8 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "Admin Dashboard" },
       { property: "og:description", content: "မိုးညှင်း ရထားခရီးစဉ် စီမံခန့်ခွဲမှု။" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AdminPage,
@@ -125,6 +128,7 @@ const TABS = [
 function AdminPage() {
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
+  useAdminAutoReply(authed);
   const [data, setData] = useState<AdminData>(EMPTY);
 
   const load = useCallback(async () => {

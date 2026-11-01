@@ -3,13 +3,22 @@ import { createClient } from "@supabase/supabase-js";
 export async function buildContext() {
   const url = process.env.SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  const sb = createClient(url, key, { auth: { persistSession: false } });
+  if (!url || !key) throw new Error("Missing database configuration");
+  const sb = createClient(url, key, { auth: { persistSession: false }, global: { fetch: (input, init) => {
+    const headers = new Headers(init?.headers);
+    if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
+    headers.set("apikey", key);
+    return fetch(input, { ...init, headers });
+  } } });
   const [trains, stops, demu, info] = await Promise.all([
     sb.from("trains").select("*").eq("is_visible", true).order("sort_order"),
     sb.from("train_stops").select("*").order("stop_order"),
     sb.from("demu_schedules").select("*").order("sort_order"),
     (sb as any).from("ai_info").select("category,title,content,updated_at").eq("is_visible", true).order("sort_order"),
   ]);
+  for (const result of [trains, stops, demu, info]) {
+    if (result.error) throw new Error(result.error.message);
+  }
   const lines: string[] = [];
   for (const t of (trains.data ?? []) as any[]) {
     lines.push(
