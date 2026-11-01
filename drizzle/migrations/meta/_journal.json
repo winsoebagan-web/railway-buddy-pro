@@ -22,6 +22,13 @@
       "when": 1791254073593,
       "tag": "0002_drop_ai_info_category_check",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793500522487,
+      "tag": "0003_ai_auto_answer_progress",
+      "breakpoints": true
     }
   ]
 }
