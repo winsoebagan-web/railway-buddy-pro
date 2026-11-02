@@ -81,6 +81,8 @@ export type Database = {
           auto_attempted_at: string | null
           auto_attempts: number
           auto_knowledge_version: number
+          auto_request_error: string | null
+          auto_requested_at: string | null
           created_at: string
           device_id: string
           id: string
@@ -93,6 +95,8 @@ export type Database = {
           auto_attempted_at?: string | null
           auto_attempts?: number
           auto_knowledge_version?: number
+          auto_request_error?: string | null
+          auto_requested_at?: string | null
           created_at?: string
           device_id: string
           id?: string
@@ -105,6 +109,8 @@ export type Database = {
           auto_attempted_at?: string | null
           auto_attempts?: number
           auto_knowledge_version?: number
+          auto_request_error?: string | null
+          auto_requested_at?: string | null
           created_at?: string
           device_id?: string
           id?: string
@@ -730,6 +736,8 @@ export type Database = {
           auto_attempted_at: string | null
           auto_attempts: number
           auto_knowledge_version: number
+          auto_request_error: string | null
+          auto_requested_at: string | null
           created_at: string
           device_id: string
           id: string

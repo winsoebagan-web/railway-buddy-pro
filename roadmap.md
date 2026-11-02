@@ -1,4 +1,4 @@
-# AI auto-answer completion
-- [ ] Add per-question Admin AI action with loading/error states.
-- [ ] Complete knowledge-change and 30-minute idle checks with bounded, database-locked processing.
-- [ ] Verify rules and authenticated Reply/AI flow; clean up test records.
+# One-tap AI answer requests
+- [ ] Persist explicit requests and automatically resume after busy/cooldown.
+- [ ] Show queued state without asking Admin to tap again.
+- [ ] Test queue rules and authenticated one-tap answer flow.
