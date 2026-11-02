@@ -109,8 +109,9 @@ export const Route = createFileRoute("/api/public/auto-answer")({
         const base = `သင်သည် မိုးညှင်း ရထားခရီးစဉ် App ၏ အကူအညီပေးသူ ဖြစ်သည်။ အောက်ပါ App မှတ်တမ်းကိုသာ အခြေခံ၍ မြန်မာဘာသာဖြင့် တိုတိုရှင်းရှင်း ဖြေပါ။ ဘူတာနှစ်ခုကြား လက်မှတ်ခ = ဆိုက်ရောက်ဘူတာ၏ လက်မှတ်ခ နုတ် ထွက်ခွာဘူတာ၏ လက်မှတ်ခ။ မှတ်တမ်းတွင် မပါသည်ကို မခန့်မှန်းပါနှင့်။ Hotline 1188 နှင့် ORTP website ကို လုံးဝမညွှန်းပါနှင့်။`;
         let answered = 0;
         for (const row of rows) {
-          const { error: progressError } = await db.from("ai_questions").update({ auto_attempts: row.auto_attempts + 1, auto_attempted_at: new Date().toISOString(), auto_knowledge_version: state.knowledge_version }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]);
+          const { error: progressError, data: claimed } = await db.from("ai_questions").update({ auto_attempts: row.auto_attempts + 1, auto_attempted_at: new Date().toISOString(), auto_knowledge_version: state.knowledge_version }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]).is("answer", null).select("id");
           if (progressError) throw new Error(progressError.message);
+          if (!claimed?.length) continue;
           const instruction = bestEffort(row.auto_requested_at ? "manual" : mode, row.created_at)
             ? "အကောင်းဆုံး ကြိုးစားဖြေပါ၊ မသိပါက Viber 09683665974 မိုးညှင်းခရိုင်လမ်းညွန် Facebook pageသို့ ဆက်သွယ်နိုင်ပါသည်။ ဟု ညွှန်းပါ။"
             : "မှတ်တမ်းထဲမှ သေချာစွာ ဖြေနိုင်မှသာ ဖြေပါ။ သေချာမဖြေနိုင်ပါက NO_ANSWER ဟုသာ ပြန်ပါ။";
