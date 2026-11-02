@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { buildContext } from "@/lib/ai-context.server";
-import { AUTO_NOTE, bestEffort, usableAnswer } from "@/lib/auto-answer-rules";
+import { AUTO_NOTE, bestEffort, usableAnswer, explicitQueueRuns, keepExplicitRequest } from "@/lib/auto-answer-rules";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -77,22 +77,30 @@ export const Route = createFileRoute("/api/public/auto-answer")({
       if (!apiKey) return json({ error: "AI ချိတ်ဆက်မှု မရှိသေးပါ။" }, 503);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const db = supabaseAdmin as any;
-      if (mode === "sweep") {
-        const { data: setting, error } = await db.from("app_settings").select("value").eq("key", "ai_mode").maybeSingle();
-        if (error) return json({ error: error.message }, 500);
-        if (setting?.value?.enabled === false) return json({ answered: 0, checked: 0, disabled: true });
+      // Persist before checking the shared lease: a busy response never loses the tap.
+      if (mode === "manual") {
+        const queued = await db.from("ai_questions").update({ auto_requested_at: new Date().toISOString(), auto_request_error: null })
+          .in("id", ids).in("status", ["pending", "needs_admin_review"]).is("answer", null).is("auto_requested_at", null);
+        if (queued.error) return json({ error: queued.error.message }, 500);
       }
+      const { data: setting, error: settingsError } = await db.from("app_settings").select("value").eq("key", "ai_mode").maybeSingle();
+      if (settingsError) return json({ error: settingsError.message }, 500);
+      const explicit = await db.from("ai_questions").select("id,question,created_at,auto_attempts,auto_requested_at")
+        .in("status", ["pending", "needs_admin_review"]).is("answer", null).not("auto_requested_at", "is", null)
+        .order("auto_requested_at").limit(2);
+      if (explicit.error) return json({ error: explicit.error.message }, 500);
+      if (!explicitQueueRuns(setting?.value?.enabled !== false, explicit.data?.length ?? 0)) return json({ answered: 0, checked: 0, disabled: true });
       const lease = crypto.randomUUID();
       const { data: locks, error: lockError } = await db.rpc("acquire_ai_auto_reply", { p_token: lease });
       if (lockError) return json({ error: lockError.message }, 500);
       const state = locks?.[0];
-      if (!state) return json({ answered: 0, checked: 0, busy: true });
+      if (!state) return json({ answered: 0, checked: 0, busy: true, queued: true });
       try {
         if (state.paused_reason) return json({ error: state.paused_reason, paused: true }, 409);
-        if (state.retry_after && Date.parse(state.retry_after) > Date.now()) return json({ answered: 0, checked: 0, coolingDown: true });
+        if (state.retry_after && Date.parse(state.retry_after) > Date.now()) return json({ answered: 0, checked: 0, coolingDown: true, queued: true });
         const result = mode === "manual"
-          ? await db.from("ai_questions").select("id,question,created_at,auto_attempts").in("status", ["pending", "needs_admin_review"]).in("id", ids)
-          : await db.rpc("ai_auto_reply_candidates", { p_version: state.knowledge_version });
+          ? await db.from("ai_questions").select("id,question,created_at,auto_attempts,auto_requested_at").in("status", ["pending", "needs_admin_review"]).is("answer", null).in("id", ids)
+          : explicit.data?.length ? explicit : await db.rpc("ai_auto_reply_candidates", { p_version: state.knowledge_version });
         if (result.error) throw new Error(result.error.message);
         const rows = result.data ?? [];
         if (!rows.length) return json({ answered: 0, checked: 0 });
@@ -103,7 +111,7 @@ export const Route = createFileRoute("/api/public/auto-answer")({
         for (const row of rows) {
           const { error: progressError } = await db.from("ai_questions").update({ auto_attempts: row.auto_attempts + 1, auto_attempted_at: new Date().toISOString(), auto_knowledge_version: state.knowledge_version }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]);
           if (progressError) throw new Error(progressError.message);
-          const instruction = bestEffort(mode, row.created_at)
+          const instruction = bestEffort(row.auto_requested_at ? "manual" : mode, row.created_at)
             ? "အကောင်းဆုံး ကြိုးစားဖြေပါ၊ မသိပါက Viber 09683665974 မိုးညှင်းခရိုင်လမ်းညွန် Facebook pageသို့ ဆက်သွယ်နိုင်ပါသည်။ ဟု ညွှန်းပါ။"
             : "မှတ်တမ်းထဲမှ သေချာစွာ ဖြေနိုင်မှသာ ဖြေပါ။ သေချာမဖြေနိုင်ပါက NO_ANSWER ဟုသာ ပြန်ပါ။";
           let text: string;
@@ -117,19 +125,28 @@ export const Route = createFileRoute("/api/public/auto-answer")({
               } else if (error.status === 422) {
                 await db.from("ai_questions").update({ auto_attempts: 3 }).eq("id", row.id);
               }
+              if (row.auto_requested_at && keepExplicitRequest(error.status)) {
+                return json({ answered, checked: 1, queued: true, coolingDown: true });
+              }
+              await db.from("ai_questions").update({ auto_requested_at: null, auto_request_error: error.message })
+                .eq("id", row.id).is("answer", null);
               return json({ error: error.message, answered }, error.status);
             }
             throw error;
           }
-          if (!usableAnswer(text)) continue;
+          if (!usableAnswer(text)) {
+            if (row.auto_requested_at) await db.from("ai_questions").update({ auto_requested_at: null, auto_request_error: "အဖြေ မရရှိပါ။ Admin မှ တိုက်ရိုက်ဖြေကြားပေးပါ။" }).eq("id", row.id).is("answer", null);
+            continue;
+          }
           // An Admin reply or deletion made while AI is working always wins.
-          const saved = await db.from("ai_questions").update({ answer: text + AUTO_NOTE, status: "answered", answered_at: new Date().toISOString() }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]).is("answer", null).select("id");
+          const saved = await db.from("ai_questions").update({ answer: text + AUTO_NOTE, status: "answered", answered_at: new Date().toISOString(), auto_requested_at: null, auto_request_error: null }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]).is("answer", null).select("id");
           if (saved.error) throw new Error(saved.error.message);
           answered += saved.data?.length ?? 0;
         }
         return json({ answered, checked: rows.length });
       } catch (error) {
         console.error("Auto answer failed", error instanceof Error ? error.message : "unknown");
+        await db.from("ai_auto_reply_state").update({ retry_after: new Date(Date.now() + 5 * 60_000).toISOString() }).eq("id", true).eq("lease_token", lease);
         return json({ error: "အလိုအလျောက်ဖြေကြားမှု မအောင်မြင်ပါ။ Admin မှ တိုက်ရိုက်ဖြေကြားနိုင်ပါသည်။" }, 500);
       } finally {
         await db.from("ai_auto_reply_state").update({ lease_token: null, lease_until: null }).eq("id", true).eq("lease_token", lease);

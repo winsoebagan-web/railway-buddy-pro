@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { AI_ANSWER_UPDATED, requestAutoAnswer } from "@/lib/admin-auto-answer";
 
-type Q = { id: string; question: string; status: string; created_at: string };
+type Q = { id: string; question: string; status: string; created_at: string; auto_requested_at: string | null; auto_request_error: string | null };
 const db = supabase as any;
 
 export function AiQuestionsPanel() {
@@ -21,7 +21,7 @@ export function AiQuestionsPanel() {
       db.from("app_settings").select("value").eq("key", "ai_mode").maybeSingle(),
       db
         .from("ai_questions")
-        .select("id,question,status,created_at")
+        .select("id,question,status,created_at,auto_requested_at,auto_request_error")
         .in("status", ["pending", "needs_admin_review"])
         .order("created_at", { ascending: false })
         .limit(200),
@@ -63,7 +63,7 @@ export function AiQuestionsPanel() {
     if (!answer) return;
     const { error } = await db
       .from("ai_questions")
-      .update({ answer, status: "answered", answered_at: new Date().toISOString() })
+      .update({ answer, status: "answered", answered_at: new Date().toISOString(), auto_requested_at: null, auto_request_error: null })
       .eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("ဖြေကြားပြီး");
@@ -76,8 +76,7 @@ export function AiQuestionsPanel() {
     try {
       const result = await requestAutoAnswer("manual", id);
       if (result.answered) toast.success("AI ဖြေကြားပြီး");
-      else if (result.busy) toast("AI က အခြားမေးခွန်းကို ဖြေနေပါသည်။ ခဏနေမှ ထပ်နှိပ်ပါ။");
-      else if (result.coolingDown) toast("ခဏစောင့်ပြီး ထပ်နှိပ်ပါ။");
+      else if (result.queued) toast("AI အားသည်နှင့် အလိုအလျောက် ဆက်ဖြေပေးပါမည်။ ထပ်နှိပ်ရန် မလိုပါ။");
       else toast("အဖြေ မတင်နိုင်သေးပါ။ Admin မှ တိုက်ရိုက်ဖြေကြားနိုင်ပါသည်။");
       await load();
     } catch (error) {
@@ -111,6 +110,8 @@ export function AiQuestionsPanel() {
           <p className="text-[11px] text-muted-foreground">
             {new Date(q.created_at).toLocaleString()} · {q.status === "pending" ? "စောင့်ဆိုင်းဆဲ" : "Admin ဖြေရန်"}
           </p>
+          {q.auto_requested_at && <p className="text-xs text-primary">AI ဖြေရန် စောင့်ဆိုင်းနေပါသည်။ အားသည်နှင့် အလိုအလျောက် ဆက်ဖြေပေးပါမည်။</p>}
+          {q.auto_request_error && <p className="text-xs text-destructive">{q.auto_request_error}</p>}
           <Textarea
             value={drafts[q.id] ?? ""}
             onChange={(e) => setDrafts((d) => ({ ...d, [q.id]: e.target.value }))}
@@ -121,9 +122,9 @@ export function AiQuestionsPanel() {
           <Button size="sm" onClick={() => reply(q.id)} disabled={answering === q.id || !(drafts[q.id] ?? "").trim()}>
             <Send className="mr-1 size-4" /> Reply
           </Button>
-          <Button size="sm" variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal text-left" onClick={() => void autoAnswer(q.id)} disabled={answering !== null}>
-            {answering === q.id ? <Loader2 className="size-4 shrink-0 animate-spin" /> : <Bot className="size-4 shrink-0" />}
-            {answering === q.id ? "AI ဖြေကြားနေပါသည်…" : "AI ဖြင့် အလိုအလျောက် ဖြေမည်"}
+          <Button size="sm" variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal text-left" onClick={() => void autoAnswer(q.id)} disabled={answering !== null || Boolean(q.auto_requested_at)}>
+            {answering === q.id || q.auto_requested_at ? <Loader2 className="size-4 shrink-0 animate-spin" /> : <Bot className="size-4 shrink-0" />}
+            {answering === q.id ? "AI ဖြေကြားနေပါသည်…" : q.auto_requested_at ? "AI ဖြေရန် စောင့်ဆိုင်းဆဲ…" : "AI ဖြင့် အလိုအလျောက် ဖြေမည်"}
           </Button>
           </div>
         </div>
