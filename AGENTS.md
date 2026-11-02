@@ -11,4 +11,5 @@
 
 - Admin auto-reply runs from the authenticated dashboard across all tabs; the server owns a database lease, knowledge revision and capped per-question progress so multiple dashboards cannot duplicate AI work.
 - Automatic sweeps respect the global AI switch; explicit per-question Admin actions may run with that switch off, and conditional answer writes preserve concurrent manual replies.
+- Explicit Admin AI requests are persisted on each question before lease acquisition; dashboard sweeps prioritize them through transient cooldowns without another tap, and terminal failures clear the request without replay.
 - Keep AI provider calls and secrets server-only; automatic failures persist pause/cooldown state and never rotate models or credentials to bypass a denial.

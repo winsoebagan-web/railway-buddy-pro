@@ -1,0 +1,4 @@
+ALTER TABLE public.ai_questions ADD COLUMN IF NOT EXISTS auto_requested_at timestamptz, ADD COLUMN IF NOT EXISTS auto_request_error text;
+CREATE INDEX IF NOT EXISTS ai_questions_requested_idx ON public.ai_questions(auto_requested_at) WHERE auto_requested_at IS NOT NULL AND answer IS NULL;
+CREATE POLICY ai_questions_no_public_auto_request ON public.ai_questions AS RESTRICTIVE FOR INSERT TO anon, authenticated WITH CHECK (auto_requested_at IS NULL AND auto_request_error IS NULL);
+COMMENT ON COLUMN public.ai_questions.auto_requested_at IS 'Explicit Admin auto-answer request retained through busy and transient failures; processed by authenticated dashboard sweeps.';

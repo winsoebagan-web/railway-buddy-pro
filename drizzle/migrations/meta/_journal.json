@@ -29,6 +29,13 @@
       "when": 1793500522487,
       "tag": "0003_ai_auto_answer_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793588189315,
+      "tag": "0004_queue_explicit_ai_answers",
+      "breakpoints": true
     }
   ]
 }

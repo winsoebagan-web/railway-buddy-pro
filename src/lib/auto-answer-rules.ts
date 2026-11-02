@@ -3,6 +3,14 @@ export const STALE_MS = 30 * 60 * 1000;
 export const BATCH_SIZE = 2;
 export const MAX_ATTEMPTS = 3;
 
+export function explicitQueueRuns(enabled: boolean, queuedCount: number) {
+  return enabled || queuedCount > 0;
+}
+
+export function keepExplicitRequest(status: number) {
+  return status === 429 || status >= 500;
+}
+
 export function bestEffort(mode: "manual" | "sweep", createdAt: string, now = Date.now()) {
   return mode === "manual" || now - new Date(createdAt).getTime() >= STALE_MS;
 }
