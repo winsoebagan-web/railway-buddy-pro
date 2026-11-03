@@ -62,10 +62,10 @@ export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
       { title: "Admin Dashboard | မိုးညှင်း ရထားခရီးစဉ်" },
-      { name: "description", content: "ရထားအချိန်ဇယား၊ ပို့စ်နှင့် အကြောင်းအရာ စီမံခန့်ခွဲမှု စာမျက်နှာ။" },
+      { name: "description", content: "မိုးညှင်း အိမ်ခြံမြေကြော်ငြာများ၊ မေးမြန်းမှုများ၊ မှတ်ချက်များနှင့် ရထားအချိန်ဇယား စီမံခန့်ခွဲမှု။" },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Admin Dashboard" },
-      { property: "og:description", content: "မိုးညှင်း ရထားခရီးစဉ် စီမံခန့်ခွဲမှု။" },
+      { property: "og:title", content: "Admin Dashboard | မိုးညှင်း ရထားနှင့် အိမ်ခြံမြေ" },
+      { property: "og:description", content: "မိုးညှင်း အိမ်ခြံမြေကြော်ငြာများ၊ မေးမြန်းမှုများ၊ မှတ်ချက်များနှင့် ရထားခရီးစဉ် စီမံခန့်ခွဲမှု။" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
