@@ -157,9 +157,10 @@ export const Route = createFileRoute("/api/public/auto-answer")({
           }
           // An Admin reply or deletion made while AI is working always wins.
           if (row.estate_listing_id) {
-            const fresh = await db.from("estate_listings").select("status,updated_at").eq("id", row.estate_listing_id).maybeSingle();
-            if (fresh.error) throw new Error(fresh.error.message);
-            if (fresh.data?.status !== "approved" || fresh.data.updated_at !== listingRevision) continue;
+            const savedEstate = await db.rpc("save_estate_ai_answer", { p_question: row.id, p_revision: listingRevision, p_answer: text + AUTO_NOTE });
+            if (savedEstate.error) throw new Error(savedEstate.error.message);
+            answered += savedEstate.data ?? 0;
+            continue;
           }
           const saved = await db.from("ai_questions").update({ answer: text + AUTO_NOTE, status: "answered", answered_at: new Date().toISOString(), auto_requested_at: null, auto_request_error: null }).eq("id", row.id).in("status", ["pending", "needs_admin_review"]).is("answer", null).select("id");
           if (saved.error) throw new Error(saved.error.message);
