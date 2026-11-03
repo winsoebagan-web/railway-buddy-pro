@@ -875,6 +875,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      save_estate_ai_answer: {
+        Args: { p_answer: string; p_question: string; p_revision: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin"

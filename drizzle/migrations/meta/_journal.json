@@ -43,6 +43,13 @@
       "when": 1793667025557,
       "tag": "0005_real_estate_manager",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793667118633,
+      "tag": "0006_estate_inquiry_safety",
+      "breakpoints": true
     }
   ]
 }
