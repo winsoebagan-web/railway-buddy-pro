@@ -39,7 +39,6 @@ import {
   DemuPanel,
   LiveBoardPanel,
   MarqueesPanel,
-  PostsPanel,
   NoticeLettersPanel,
   NoticeVideosPanel,
   SectionsPanel,
@@ -56,16 +55,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AiInfoPanel } from "@/components/admin/AiInfoPanel";
 import { AiQuestionsPanel } from "@/components/admin/AiQuestionsPanel";
 import { useAdminAutoReply } from "@/lib/use-admin-auto-reply";
+import { RealEstatePanel } from "@/components/admin/RealEstatePanel";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
       { title: "Admin Dashboard | မိုးညှင်း ရထားခရီးစဉ်" },
-      { name: "description", content: "ရထားအချိန်ဇယား၊ ပို့စ်နှင့် အကြောင်းအရာ စီမံခန့်ခွဲမှု စာမျက်နှာ။" },
+      { name: "description", content: "မိုးညှင်း အိမ်ခြံမြေကြော်ငြာများ၊ မေးမြန်းမှုများ၊ မှတ်ချက်များနှင့် ရထားအချိန်ဇယား စီမံခန့်ခွဲမှု။" },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Admin Dashboard" },
-      { property: "og:description", content: "မိုးညှင်း ရထားခရီးစဉ် စီမံခန့်ခွဲမှု။" },
+      { property: "og:title", content: "Admin Dashboard | မိုးညှင်း ရထားနှင့် အိမ်ခြံမြေ" },
+      { property: "og:description", content: "မိုးညှင်း အိမ်ခြံမြေကြော်ငြာများ၊ မေးမြန်းမှုများ၊ မှတ်ချက်များနှင့် ရထားခရီးစဉ် စီမံခန့်ခွဲမှု။" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -113,7 +113,7 @@ const TABS = [
   { key: "sections", label: "ခေါင်းစဉ်များ" },
   { key: "trains", label: "ရထားများ" },
   { key: "stations", label: "ဘူတာများ" },
-  { key: "posts", label: "ပို့စ်များ" },
+  { key: "posts", label: "အိမ်ခြံမြေ" },
   { key: "reports", label: "အသိပေးစာ" },
   { key: "notifications", label: "နိုတီ" },
   { key: "audios", label: "အသံဖိုင်" },
@@ -253,7 +253,7 @@ function AdminPage() {
             <StationsPanel rows={data.stations} refresh={load} />
           </TabsContent>
           <TabsContent value="posts" className="mt-4">
-            <PostsPanel rows={data.posts} refresh={load} />
+            <RealEstatePanel />
           </TabsContent>
           <TabsContent value="reports" className="mt-4">
             <NoticeLettersPanel rows={data.noticeLetters} refresh={load} />

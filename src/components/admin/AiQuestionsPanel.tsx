@@ -23,6 +23,7 @@ export function AiQuestionsPanel() {
         .from("ai_questions")
         .select("id,question,status,created_at,auto_requested_at,auto_request_error")
         .in("status", ["pending", "needs_admin_review"])
+        .is("estate_listing_id", null)
         .order("created_at", { ascending: false })
         .limit(200),
     ]);
