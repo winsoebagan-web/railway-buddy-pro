@@ -85,9 +85,12 @@ export type Database = {
           auto_requested_at: string | null
           created_at: string
           device_id: string
+          estate_listing_id: string | null
+          guest_name: string
           id: string
           question: string
           status: string
+          submitter_id: string | null
         }
         Insert: {
           answer?: string | null
@@ -99,9 +102,12 @@ export type Database = {
           auto_requested_at?: string | null
           created_at?: string
           device_id: string
+          estate_listing_id?: string | null
+          guest_name?: string
           id?: string
           question: string
           status?: string
+          submitter_id?: string | null
         }
         Update: {
           answer?: string | null
@@ -113,11 +119,22 @@ export type Database = {
           auto_requested_at?: string | null
           created_at?: string
           device_id?: string
+          estate_listing_id?: string | null
+          guest_name?: string
           id?: string
           question?: string
           status?: string
+          submitter_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_questions_estate_listing_id_fkey"
+            columns: ["estate_listing_id"]
+            isOneToOne: false
+            referencedRelation: "estate_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       app_settings: {
         Row: {
@@ -209,6 +226,101 @@ export type Database = {
           sort_order?: number
           train_no?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      estate_comments: {
+        Row: {
+          body: string
+          created_at: string
+          guest_name: string
+          id: string
+          listing_id: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          guest_name?: string
+          id?: string
+          listing_id: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          guest_name?: string
+          id?: string
+          listing_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estate_comments_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "estate_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estate_listings: {
+        Row: {
+          area: string
+          created_at: string
+          description: string
+          guest_name: string
+          id: string
+          land_type: string
+          length: string
+          location: string
+          phone: string
+          price: number
+          property_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string | null
+          viber: string
+          width: string
+        }
+        Insert: {
+          area?: string
+          created_at?: string
+          description?: string
+          guest_name?: string
+          id?: string
+          land_type?: string
+          length?: string
+          location?: string
+          phone?: string
+          price?: number
+          property_type?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          viber?: string
+          width?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          description?: string
+          guest_name?: string
+          id?: string
+          land_type?: string
+          length?: string
+          location?: string
+          phone?: string
+          price?: number
+          property_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          viber?: string
+          width?: string
         }
         Relationships: []
       }
@@ -740,9 +852,12 @@ export type Database = {
           auto_requested_at: string | null
           created_at: string
           device_id: string
+          estate_listing_id: string | null
+          guest_name: string
           id: string
           question: string
           status: string
+          submitter_id: string | null
         }[]
         SetofOptions: {
           from: "*"
