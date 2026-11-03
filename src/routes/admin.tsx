@@ -39,7 +39,6 @@ import {
   DemuPanel,
   LiveBoardPanel,
   MarqueesPanel,
-  PostsPanel,
   NoticeLettersPanel,
   NoticeVideosPanel,
   SectionsPanel,
@@ -56,6 +55,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AiInfoPanel } from "@/components/admin/AiInfoPanel";
 import { AiQuestionsPanel } from "@/components/admin/AiQuestionsPanel";
 import { useAdminAutoReply } from "@/lib/use-admin-auto-reply";
+import { RealEstatePanel } from "@/components/admin/RealEstatePanel";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -113,7 +113,7 @@ const TABS = [
   { key: "sections", label: "ခေါင်းစဉ်များ" },
   { key: "trains", label: "ရထားများ" },
   { key: "stations", label: "ဘူတာများ" },
-  { key: "posts", label: "ပို့စ်များ" },
+  { key: "posts", label: "အိမ်ခြံမြေ" },
   { key: "reports", label: "အသိပေးစာ" },
   { key: "notifications", label: "နိုတီ" },
   { key: "audios", label: "အသံဖိုင်" },
@@ -253,7 +253,7 @@ function AdminPage() {
             <StationsPanel rows={data.stations} refresh={load} />
           </TabsContent>
           <TabsContent value="posts" className="mt-4">
-            <PostsPanel rows={data.posts} refresh={load} />
+            <RealEstatePanel />
           </TabsContent>
           <TabsContent value="reports" className="mt-4">
             <NoticeLettersPanel rows={data.noticeLetters} refresh={load} />
