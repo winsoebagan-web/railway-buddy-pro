@@ -85,6 +85,7 @@ export type Database = {
           auto_requested_at: string | null
           created_at: string
           device_id: string
+          estate_guest_access_hash: string | null
           estate_listing_id: string | null
           guest_name: string
           id: string
@@ -102,6 +103,7 @@ export type Database = {
           auto_requested_at?: string | null
           created_at?: string
           device_id: string
+          estate_guest_access_hash?: string | null
           estate_listing_id?: string | null
           guest_name?: string
           id?: string
@@ -119,6 +121,7 @@ export type Database = {
           auto_requested_at?: string | null
           created_at?: string
           device_id?: string
+          estate_guest_access_hash?: string | null
           estate_listing_id?: string | null
           guest_name?: string
           id?: string
@@ -269,6 +272,7 @@ export type Database = {
           area: string
           created_at: string
           description: string
+          guest_access_hash: string | null
           guest_name: string
           id: string
           land_type: string
@@ -288,6 +292,7 @@ export type Database = {
           area?: string
           created_at?: string
           description?: string
+          guest_access_hash?: string | null
           guest_name?: string
           id?: string
           land_type?: string
@@ -307,6 +312,7 @@ export type Database = {
           area?: string
           created_at?: string
           description?: string
+          guest_access_hash?: string | null
           guest_name?: string
           id?: string
           land_type?: string
@@ -852,6 +858,7 @@ export type Database = {
           auto_requested_at: string | null
           created_at: string
           device_id: string
+          estate_guest_access_hash: string | null
           estate_listing_id: string | null
           guest_name: string
           id: string
@@ -867,6 +874,7 @@ export type Database = {
         }
       }
       bump_viewers: { Args: { _by?: number }; Returns: number }
+      estate_mobile_history: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
