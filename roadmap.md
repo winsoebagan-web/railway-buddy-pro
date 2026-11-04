@@ -1,4 +1,6 @@
 # One-tap AI answer requests
+- [x] Add phone-app estate browsing, listing submission and inquiry/answer history connected to Admin.
+- [x] Verify guest submission, Admin moderation/reply, read-state persistence and offline cached answer readback.
 - [x] Replace Admin Posts with Real Estate Manager: listings, inquiries, comments and summary counts.
 - [x] Connect estate inquiries to shared one-tap AI queue and 30-minute dashboard timer.
 - [x] Verify permissions, moderation and replies in the authenticated dashboard.

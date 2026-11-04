@@ -16,6 +16,7 @@ import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
 import { AskAI } from "@/components/app/AskAI";
 import { Button } from "@/components/ui/button";
+import { EstateSection } from "@/components/app/EstateSection";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -25,14 +26,14 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "မိုးညှင်း – မြစ်ကြီးနား ရထားခရီးစဉ်များ၏ အချိန်ဇယား၊ ဘူတာစာရင်းနှင့် လက်မှတ်ခများကို အလွယ်တကူ ရှာဖွေကြည့်ရှုပါ။",
+          "မိုးညှင်း ရထားအချိန်ဇယား၊ လက်မှတ်ခနှင့် အိမ်ခြံမြေကြော်ငြာများ။ ကြော်ငြာတင်ခြင်း၊ မေးမြန်းခြင်းနှင့် အဖြေမှတ်တမ်းကြည့်ရှုခြင်း။",
       },
       { property: "og:title", content: "မိုးညှင်း ရထားခရီးစဉ် | အချိန်ဇယားနှင့် လက်မှတ်ခ" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       {
         property: "og:description",
-        content: "မိုးညှင်း – မြစ်ကြီးနား ရထားခရီးစဉ်များ၏ အချိန်ဇယား၊ ဘူတာစာရင်းနှင့် လက်မှတ်ခများကို အလွယ်တကူ ရှာဖွေကြည့်ရှုပါ။",
+        content: "မိုးညှင်း ရထားအချိန်ဇယား၊ လက်မှတ်ခနှင့် အိမ်ခြံမြေကြော်ငြာများ။ ကြော်ငြာတင်ခြင်း၊ မေးမြန်းခြင်းနှင့် အဖြေမှတ်တမ်းကြည့်ရှုခြင်း။",
       },
     ],
   }),
@@ -190,6 +191,8 @@ function Home() {
             {section.key === "demu" ? <DemuSection rows={bundle.demu} /> : null}
           </section>
         ))}
+
+        {hydrated ? <EstateSection /> : null}
 
         <div className="flex justify-center">
           <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
