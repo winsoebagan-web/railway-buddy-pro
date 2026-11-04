@@ -16,6 +16,7 @@ import { AudioSection } from "@/components/app/AudioSection";
 import { DemuSection } from "@/components/app/DemuSection";
 import { AskAI } from "@/components/app/AskAI";
 import { Button } from "@/components/ui/button";
+import { EstateSection } from "@/components/app/EstateSection";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -190,6 +191,8 @@ function Home() {
             {section.key === "demu" ? <DemuSection rows={bundle.demu} /> : null}
           </section>
         ))}
+
+        {hydrated ? <EstateSection /> : null}
 
         <div className="flex justify-center">
           <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>

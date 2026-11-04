@@ -14,3 +14,4 @@
 - Explicit Admin AI requests are persisted on each question before lease acquisition; dashboard sweeps prioritize them through transient cooldowns without another tap, and terminal failures clear the request without replay.
 - Keep AI provider calls and secrets server-only; automatic failures persist pause/cooldown state and never rotate models or credentials to bypass a denial.
 - Estate listings and comments use separate RLS-protected tables; linked estate inquiries reuse the existing AI question lease and timer to preserve one-tap queue safety, with approved per-listing context and a revision recheck before saving. Railway inbox queries exclude linked estate inquiries.
+- Phone estate submissions write directly to the database; private guest history uses a random receipt secret whose hash is stored on rows and verified by a narrowly scoped RPC, never a public device ID. Browser copies are offline caches only.
