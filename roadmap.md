@@ -1,5 +1,5 @@
 # One-tap AI answer requests
-- [ ] Add private estate conversations for the listing phone and inquiring phone, with Admin monitoring; verify isolation and replies.
+- [x] Add private estate conversations for the listing phone and inquiring phone, with Admin monitoring; verified live database isolation and two-phone/Admin UI replies.
 - [x] Add phone-app estate browsing, listing submission and inquiry/answer history connected to Admin.
 - [x] Verify guest submission, Admin moderation/reply, read-state persistence and offline cached answer readback.
 - [x] Replace Admin Posts with Real Estate Manager: listings, inquiries, comments and summary counts.
