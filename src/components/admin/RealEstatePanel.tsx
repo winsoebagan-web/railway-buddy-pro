@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AI_ANSWER_UPDATED, requestAutoAnswer } from "@/lib/admin-auto-answer";
 import { estateSummary } from "@/lib/estate-rules";
+import { EstateMessages } from "@/components/app/EstateConversation";
+import { sendEstateMessage, type EstateMessage } from "@/lib/estate-mobile";
 
 type Listing = Database["public"]["Tables"]["estate_listings"]["Row"];
 type Inquiry = Database["public"]["Tables"]["ai_questions"]["Row"];
@@ -18,6 +20,7 @@ const statuses: Record<string, string> = { pending: "စစ်ဆေးဆဲ", 
 export function RealEstatePanel() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [messages, setMessages] = useState<(EstateMessage & { inquiry_id: string })[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,14 +29,15 @@ export function RealEstatePanel() {
   const [listingFilter, setListingFilter] = useState("pending");
   const [inquiryFilter, setInquiryFilter] = useState("pending");
   const load = useCallback(async () => {
-    const [l, q, c] = await Promise.all([
+    const [l, q, c, m] = await Promise.all([
       supabase.from("estate_listings").select("*").order("created_at", { ascending: false }),
       supabase.from("ai_questions").select("*").not("estate_listing_id", "is", null).order("created_at", { ascending: false }),
       supabase.from("estate_comments").select("*").order("created_at", { ascending: false }),
+      supabase.from("estate_messages").select("*").order("created_at"),
     ]);
-    const failure = l.error || q.error || c.error;
+    const failure = l.error || q.error || c.error || m.error;
     setError(failure?.message ?? "");
-    if (!failure) { setListings(l.data ?? []); setInquiries(q.data ?? []); setComments(c.data ?? []); }
+    if (!failure) { setListings(l.data ?? []); setInquiries(q.data ?? []); setComments(c.data ?? []); setMessages((m.data ?? []) as (EstateMessage & { inquiry_id: string })[]); }
     setLoading(false);
   }, []);
   useEffect(() => {
@@ -84,7 +88,10 @@ export function RealEstatePanel() {
         {inquiries.filter(q => (q.status === "answered") === (inquiryFilter === "answered")).map(q => <article key={q.id} className="space-y-3 rounded-lg border border-border bg-card p-4">
           <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-xs font-semibold text-primary">{title(q.estate_listing_id)}</p><p className="mt-2 whitespace-pre-wrap break-words text-sm">{q.question}</p></div><Button size="icon" variant="ghost" aria-label="မေးခွန်းဖျက်မည်" disabled={!!busy} onClick={() => { if (confirm("မေးခွန်းကို ဖျက်မလား?")) void action(q.id, () => supabase.from("ai_questions").delete().eq("id", q.id)); }}><Trash2 className="size-4 text-destructive" /></Button></div>
           <p className="text-xs text-muted-foreground">{q.submitter_id ? "User" : q.guest_name || "Guest"} · {new Date(q.created_at).toLocaleString()}</p>
-          {q.answer ? <p className="whitespace-pre-wrap break-words border-l-2 border-primary pl-3 text-sm">{q.answer}</p> : <><Textarea aria-label="Reply" placeholder="အဖြေ ရိုက်ထည့်ပါ…" value={drafts[q.id] ?? ""} onChange={e => setDrafts(d => ({ ...d, [q.id]: e.target.value }))} />{q.auto_requested_at && <p className="text-xs text-primary">AI ဖြေရန် စောင့်ဆိုင်းနေပါသည်။</p>}{q.auto_request_error && <p className="text-xs text-destructive">{q.auto_request_error}</p>}<div className="flex flex-wrap gap-2"><Button size="sm" disabled={!!busy || !(drafts[q.id] ?? "").trim()} onClick={() => void action(q.id, () => supabase.from("ai_questions").update({ answer: drafts[q.id].trim(), status: "answered", answered_at: new Date().toISOString(), auto_requested_at: null, auto_request_error: null }).eq("id", q.id).is("answer", null))}><Send className="size-4" />Reply</Button><Button size="sm" variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal" disabled={!!busy || !!q.auto_requested_at} onClick={() => void ai(q.id)}>{busy === q.id || q.auto_requested_at ? <Loader2 className="size-4 shrink-0 animate-spin" /> : <Bot className="size-4 shrink-0" />}{q.auto_requested_at ? "AI ဖြေရန် စောင့်ဆိုင်းဆဲ…" : "AI ဖြင့် အလိုအလျောက် ဖြေမည်"}</Button></div></>}
+          {q.answer ? (messages.some(m => m.inquiry_id === q.id && m.body === q.answer) ? null : <p className="whitespace-pre-wrap break-words border-l-2 border-primary pl-3 text-sm">{q.answer}</p>) : <><Textarea aria-label="Reply" placeholder="အဖြေ ရိုက်ထည့်ပါ…" value={drafts[q.id] ?? ""} onChange={e => setDrafts(d => ({ ...d, [q.id]: e.target.value }))} />{q.auto_requested_at && <p className="text-xs text-primary">AI ဖြေရန် စောင့်ဆိုင်းနေပါသည်။</p>}{q.auto_request_error && <p className="text-xs text-destructive">{q.auto_request_error}</p>}<div className="flex flex-wrap gap-2"><Button size="sm" disabled={!!busy || !(drafts[q.id] ?? "").trim()} onClick={() => void action(q.id, () => supabase.from("ai_questions").update({ answer: drafts[q.id].trim(), status: "answered", answered_at: new Date().toISOString(), auto_requested_at: null, auto_request_error: null }).eq("id", q.id).is("answer", null))}><Send className="size-4" />Reply</Button><Button size="sm" variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal" disabled={!!busy || !!q.auto_requested_at} onClick={() => void ai(q.id)}>{busy === q.id || q.auto_requested_at ? <Loader2 className="size-4 shrink-0 animate-spin" /> : <Bot className="size-4 shrink-0" />}{q.auto_requested_at ? "AI ဖြေရန် စောင့်ဆိုင်းဆဲ…" : "AI ဖြင့် အလိုအလျောက် ဖြေမည်"}</Button></div></>}
+          <EstateMessages messages={messages.filter(m => m.inquiry_id === q.id)} />
+          <Textarea aria-label="Admin စာပို့ရန်" maxLength={2000} value={drafts[`thread-${q.id}`] ?? ""} onChange={e => setDrafts(d => ({ ...d, [`thread-${q.id}`]: e.target.value }))} />
+          <Button size="sm" disabled={!!busy || !(drafts[`thread-${q.id}`] ?? "").trim()} onClick={() => void action(q.id, async () => { await sendEstateMessage(q.id, drafts[`thread-${q.id}`] ?? ""); setDrafts(d => ({ ...d, [`thread-${q.id}`]: "" })); return { error: null }; })}><Send className="size-4" />စာပို့မည်</Button>
         </article>)}
       </TabsContent>
       <TabsContent value="comments" className="space-y-3">{comments.length === 0 && empty}{comments.map(c => <article key={c.id} className="rounded-lg border border-border bg-card p-4"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-xs font-semibold text-primary">{title(c.listing_id)}</p><p className="my-2 whitespace-pre-wrap break-words text-sm">{c.body}</p><p className="text-xs text-muted-foreground">{c.user_id ? "User" : c.guest_name || "Guest"} · {new Date(c.created_at).toLocaleString()}</p></div><Button variant="ghost" size="icon" aria-label="မှတ်ချက်ဖျက်မည်" disabled={!!busy} onClick={() => { if (confirm("မှတ်ချက်ကို ဖျက်မလား?")) void action(c.id, () => supabase.from("estate_comments").delete().eq("id", c.id)); }}><Trash2 className="size-4 text-destructive" /></Button></div></article>)}</TabsContent>

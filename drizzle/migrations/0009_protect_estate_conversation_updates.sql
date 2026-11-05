@@ -1,0 +1,2 @@
+CREATE POLICY estate_inquiry_admin_updates ON public.ai_questions AS RESTRICTIVE FOR UPDATE TO anon,authenticated USING (estate_listing_id IS NULL OR public.is_admin()) WITH CHECK (estate_listing_id IS NULL OR public.is_admin());
+CREATE POLICY estate_inquiry_admin_deletes ON public.ai_questions AS RESTRICTIVE FOR DELETE TO anon,authenticated USING (estate_listing_id IS NULL OR public.is_admin());

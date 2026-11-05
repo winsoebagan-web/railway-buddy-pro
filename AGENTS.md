@@ -15,3 +15,4 @@
 - Keep AI provider calls and secrets server-only; automatic failures persist pause/cooldown state and never rotate models or credentials to bypass a denial.
 - Estate listings and comments use separate RLS-protected tables; linked estate inquiries reuse the existing AI question lease and timer to preserve one-tap queue safety, with approved per-listing context and a revision recheck before saving. Railway inbox queries exclude linked estate inquiries.
 - Phone estate submissions write directly to the database; private guest history uses a random receipt secret whose hash is stored on rows and verified by a narrowly scoped RPC, never a public device ID. Browser copies are offline caches only.
+- Estate conversation access and sending are verified in database RPCs against listing/inquiry receipt hashes (legacy hashless rows may use authenticated ownership); messages are append-only and Admin-readable to preserve private two-phone communication and monitoring.
