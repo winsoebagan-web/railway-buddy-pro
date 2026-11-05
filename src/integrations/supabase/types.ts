@@ -330,6 +330,38 @@ export type Database = {
         }
         Relationships: []
       }
+      estate_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          inquiry_id: string
+          sender: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          inquiry_id: string
+          sender: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          inquiry_id?: string
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estate_messages_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "ai_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_board_settings: {
         Row: {
           auto_enabled: boolean
@@ -875,6 +907,10 @@ export type Database = {
       }
       bump_viewers: { Args: { _by?: number }; Returns: number }
       estate_mobile_history: { Args: { p_token: string }; Returns: Json }
+      estate_send_message: {
+        Args: { p_body: string; p_inquiry: string; p_token: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
