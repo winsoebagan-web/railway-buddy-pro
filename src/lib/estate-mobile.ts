@@ -1,12 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { readCache, writeCache } from "@/lib/offline";
+import { estateSubmissionValues, validateEstateSubmission, type EstateSubmission } from "@/lib/estate-mobile-rules";
 
 export type EstateListing = Database["public"]["Tables"]["estate_listings"]["Row"];
 export type EstateMessage = { id: string; sender: "owner" | "inquirer" | "admin"; body: string; created_at: string };
 export type EstateInquiry = { id: string; estate_listing_id: string; listing_title: string; question: string; answer: string | null; status: string; created_at: string; answered_at: string | null; role: "owner" | "inquirer"; messages: EstateMessage[] };
 export type EstateHistory = { listings: EstateListing[]; inquiries: EstateInquiry[] };
-export type EstateDraft = { title: string; property_type: string; land_type: string; price: string; area: string; length: string; width: string; phone: string; viber: string; location: string; description: string; guest_name: string };
+export type EstateDraft = EstateSubmission;
 
 function receiptToken() {
   let token = readCache<string>("estate-private-receipt");
@@ -36,8 +37,10 @@ export async function fetchEstateHistory(): Promise<EstateHistory> {
   return data as unknown as EstateHistory;
 }
 export async function submitEstateListing(draft: EstateDraft) {
+  const validation = validateEstateSubmission(draft);
+  if (validation) throw new Error(validation);
   const { hash, userId } = await identity();
-  const { error } = await supabase.from("estate_listings").insert({ ...draft, price: Number(draft.price), title: draft.title.trim(), status: "pending", user_id: userId, guest_access_hash: hash });
+  const { error } = await supabase.from("estate_listings").insert({ ...estateSubmissionValues(draft), status: "pending", user_id: userId, guest_access_hash: hash });
   if (error) throw error;
 }
 export async function submitEstateInquiry(listingId: string, question: string, name: string) {

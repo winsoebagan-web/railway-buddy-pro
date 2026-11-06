@@ -1,4 +1,5 @@
 # One-tap AI answer requests
+- [x] Simplify phone estate submission to six fields and GPS location; verified the 1000-character limit, live guest submission and readback after reload on mobile; removed test listing.
 - [x] Add private estate conversations for the listing phone and inquiring phone, with Admin monitoring; verified live database isolation and two-phone/Admin UI replies.
 - [x] Add phone-app estate browsing, listing submission and inquiry/answer history connected to Admin.
 - [x] Verify guest submission, Admin moderation/reply, read-state persistence and offline cached answer readback.
