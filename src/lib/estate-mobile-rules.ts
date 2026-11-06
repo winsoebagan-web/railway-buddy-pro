@@ -5,7 +5,6 @@ export type EstateSubmission = { property_type: string; guest_name: string; phon
 export function validateEstateSubmission(input: EstateSubmission) {
   if (!ESTATE_PROPERTY_TYPES.some(type => type === input.property_type)) return "အိမ်ခြံမြေ အမျိုးအစား ရွေးပါ။";
   if (!input.guest_name.trim() || input.guest_name.length > 100) return "တင်သူအမည် ထည့်ပါ။";
-  if (!input.location.trim()) return "တည်နေရာ ထည့်ပါ။";
   if (!input.phone.trim()) return "ဆက်သွယ်ရန် ဖုန်းနံပါတ် ထည့်ပါ။";
   if (input.description.length > ESTATE_DESCRIPTION_LIMIT) return "အသေးစိတ် အကြောင်းအရာကို စာလုံးရေ ၁၀၀၀ အထိသာ ထည့်နိုင်ပါသည်။";
   return null;

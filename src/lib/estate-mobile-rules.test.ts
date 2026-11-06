@@ -16,6 +16,11 @@ describe("phone estate submissions", () => {
     expect(validateEstateSubmission({ ...draft, description: "က".repeat(1000) })).toBeNull();
     expect(validateEstateSubmission({ ...draft, description: "က".repeat(1001) })).not.toBeNull();
   });
+  it("allows submission without GPS or a location", () => {
+    expect(validateEstateSubmission({ ...draft, location: "" })).toBeNull();
+    expect(estateSubmissionValues({ ...draft, location: " " }).location).toBe("");
+    expect(validateEstateSubmission(draft)).toBeNull();
+  });
   it("requires a submitter name and retains a GPS map location", () => {
     expect(validateEstateSubmission({ ...draft, guest_name: " " })).not.toBeNull();
     expect(estateSubmissionValues({ ...draft, location: "https://www.google.com/maps?q=24.7,96.3" }).location).toBe("https://www.google.com/maps?q=24.7,96.3");
